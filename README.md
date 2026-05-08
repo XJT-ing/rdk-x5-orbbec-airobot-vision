@@ -24,7 +24,6 @@ In addition to object grasping, the project also includes facial emotion recogni
 - RDK X5
 - Orbbec Gemini2 RGB-D camera
 - AIRobot robotic arm
-- Robot chassis / companion robot platform
 
 ## Software Environment
 
@@ -33,4 +32,4 @@ In addition to object grasping, the project also includes facial emotion recogni
 - Python / C++
 - OpenCV
 - YOLOv8
-- Orbbec SDK / Orbbec ROS2 driver
+- Orbbec SDK 

@@ -1,0 +1,90 @@
+# =========================
+# ROS2 build outputs
+# =========================
+build/
+install/
+log/
+
+# =========================
+# Python cache
+# =========================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+.venv/
+venv/
+env/
+
+# =========================
+# C++ / CMake build files
+# =========================
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+*.o
+*.so
+*.a
+*.dll
+*.exe
+*.out
+
+# =========================
+# IDE / editor files
+# =========================
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# =========================
+# System files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Logs and temporary files
+# =========================
+*.log
+tmp/
+temp/
+.cache/
+
+# =========================
+# ROS bag / recorded data
+# =========================
+*.bag
+*.db3
+rosbags/
+recordings/
+
+# =========================
+# Images / videos / datasets
+# =========================
+data/
+datasets/
+captures/
+images/
+videos/
+*.mp4
+*.avi
+*.mov
+
+# =========================
+# Model weights
+# =========================
+*.pt
+*.pth
+*.onnx
+*.engine
+*.bin
+
+# =========================
+# Private configs
+# =========================
+.env
+*_private.yaml
+*_private.json

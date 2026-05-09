@@ -1,203 +1,432 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""Single-owner AIRBOT executor node.
 
+This node is the only place that calls the AIRBOT SDK. It accepts one command
+only when the executor is idle. Commands received while a motion is running are
+rejected immediately and are never queued or cached for later execution.
+
+All joint targets are validated against conservative AIRBOT Play joint limits
+before being forwarded to the SDK.  Targets that violate any joint limit are
+rejected with REJECTED_INVALID_JOINT_LIMIT — automatic clamping is intentionally
+not applied so that the task layer always receives clear feedback.
+"""
+
+import math
 import threading
+from typing import Any, Optional, Tuple
 
 import rclpy
+from geometry_msgs.msg import PointStamped, PoseStamped
 from rclpy.node import Node
-from geometry_msgs.msg import PoseStamped
-from robot_msgs.msg import ArmCommand, ArmState
+from std_msgs.msg import Float64MultiArray, String
+
 from robot_arm_interface.airbot_wrapper import AirbotWrapper
+from robot_msgs.msg import ArmJointState
 
 
 class ArmExecutorNode(Node):
+    """ROS topic facade around the AIRBOT SDK."""
+
+    IDLE = 'IDLE'
+    BUSY = 'BUSY'
+    DONE = 'DONE'
+    ERROR = 'ERROR'
+    REJECTED_BUSY = 'REJECTED_BUSY'
+    REJECTED_INVALID_JOINT_LIMIT = 'REJECTED_INVALID_JOINT_LIMIT'
+
     def __init__(self):
         super().__init__('arm_executor_node')
 
-        self.robot = AirbotWrapper(url='localhost', port=50001)
-        self.connected = False
+        self.declare_parameter('do_init', True)
+        self.declare_parameter(
+            'init_joint_pos_deg',
+            [0.0, -45.0, 120.0, -90.0, 90.0, 90.0],
+        )
 
-        self.busy = False
-        self.last_command = ''
-        self.last_success = True
-        self.last_error = ''
+        # Conservative AIRBOT Play joint limits.
+        # Confirm the exact hardware model before widening these values.
+        # J1 [-180°, +120°], J2 [-170°, +10°], J3 [-5°, +180°],
+        # J4 [-148°, +148°], J5 [-100°, +100°], J6 [-170°, +170°].
+        self.declare_parameter(
+            'joint_min_rad',
+            [-3.1416, -2.9671, -0.0873, -2.5831, -1.7453, -2.9671],
+        )
+        self.declare_parameter(
+            'joint_max_rad',
+            [2.0944, 0.1745, 3.1416, 2.5831, 1.7453, 2.9671],
+        )
 
-        self.home_joint = [0.0, -0.785398, 0.785398, 0.0, 0.0, 0.0]
-        self.sleep_joint = [0.0, -0.7853981633974483, 1.8325957145940461, -1.3089969389957472, 1.3089969389957472, 1.5707963267948966]
+        self.arm = AirbotWrapper(url='localhost', port=50001)
+        self.sdk_lock = threading.Lock()
+        self.status_lock = threading.Lock()
+        self.executor_state = self.IDLE
+        self.active_thread = None
+        self.last_state_msg = None
+        self.last_pose_msg = None
 
         self.state_pub = self.create_publisher(
-            ArmState,
-            '/robot_arm/state',
-            10
+            ArmJointState, '/robot_arm/joint_state', 10)
+        self.end_pose_pub = self.create_publisher(
+            PoseStamped, '/robot_arm/end_pose', 10)
+        self.executor_status_pub = self.create_publisher(
+            String, '/robot_arm/executor_status', 10)
+
+        self.arm.connect(speed_profile='slow')
+        self._publish_executor_status(self.IDLE)
+
+        if self.get_parameter('do_init').value:
+            self._move_to_init_pose()
+
+        with self.sdk_lock:
+            self.arm.set_speed_profile('default')
+        self.get_logger().info(
+            'Arm initialized; executor is ready and speed profile is default.')
+
+        self.state_timer = self.create_timer(0.1, self.publish_state)
+
+        self.joint_sub = self.create_subscription(
+            Float64MultiArray,
+            '/robot_arm/target_joint',
+            self.joint_target_callback,
+            10,
         )
-        self.pose_pub = self.create_publisher(
-            PoseStamped,
-            '/robot_arm/end_pose',
-            10
+        self.cart_sub = self.create_subscription(
+            PointStamped,
+            '/robot_arm/cart_target',
+            self.cart_target_callback,
+            10,
+        )
+        self.gripper_sub = self.create_subscription(
+            String,
+            '/robot_arm/gripper_cmd',
+            self.gripper_callback,
+            10,
+        )
+        self.speed_sub = self.create_subscription(
+            String,
+            '/robot_arm/speed_profile',
+            self.speed_callback,
+            10,
+        )
+        self.reset_sub = self.create_subscription(
+            String,
+            '/robot_arm/reset_executor',
+            self.reset_callback,
+            10,
         )
 
-        self.cmd_sub = self.create_subscription(
-            ArmCommand,
-            '/robot_arm/cmd',
-            self.command_callback,
-            10
-        )
+        self.get_logger().info(
+            'ArmExecutorNode started. Listening on /robot_arm/target_joint, '
+            '/robot_arm/cart_target, /robot_arm/gripper_cmd, /robot_arm/speed_profile, '
+            '/robot_arm/reset_executor.')
+        self.get_logger().info(
+            'Publishing /robot_arm/joint_state, /robot_arm/end_pose, '
+            '/robot_arm/executor_status.')
+        self.get_logger().info(
+            'Joint limits active: all 6 joints checked; '
+            'targets exceeding limits are rejected without automatic clamping.')
 
-        self.timer = self.create_timer(0.1, self.publish_feedback)
+    # ------------------------------------------------------------------
+    # Joint limit helpers
+    # ------------------------------------------------------------------
 
-        try:
-            self.robot.connect(speed_profile='default')
-            self.connected = True
-            self.get_logger().info('ArmExecutorNode connected to robot server.')
-        except Exception as e:
-            self.get_logger().error(f'Failed to connect to robot server: {e}')
+    @staticmethod
+    def _rad_to_deg(rad: float) -> float:
+        """Convert radians to degrees."""
+        return rad * 180.0 / math.pi
 
-        self.get_logger().info('ArmExecutorNode started.')
-        self.get_logger().info('Subscribed topic: /robot_arm/cmd')
-        self.get_logger().info('Publishing topics: /robot_arm/state, /robot_arm/end_pose')
+    def _get_joint_limits(self) -> Tuple[list, list]:
+        """Return (joint_min_rad, joint_max_rad) as six-element lists."""
+        min_rad = list(self.get_parameter('joint_min_rad').value)
+        max_rad = list(self.get_parameter('joint_max_rad').value)
+        return min_rad, max_rad
 
-    def command_callback(self, msg: ArmCommand):
-        if not self.connected:
-            self.get_logger().error('Robot is not connected.')
+    def _validate_joint_target(self, target: list) -> bool:
+        """Return True if every joint is within the configured limits.
+
+        Logs detailed per-joint error information when a violation is found.
+        """
+        if len(target) != 6:
+            self.get_logger().error(
+                f'Joint target length is {len(target)}, expected 6.')
+            return False
+
+        joint_min, joint_max = self._get_joint_limits()
+
+        if len(joint_min) != 6 or len(joint_max) != 6:
+            self.get_logger().error(
+                f'Joint limit arrays have wrong length: '
+                f'min={len(joint_min)}, max={len(joint_max)} (both must be 6).')
+            return False
+
+        for i in range(6):
+            value = float(target[i])
+            lo = float(joint_min[i])
+            hi = float(joint_max[i])
+            if value < lo or value > hi:
+                self.get_logger().error(
+                    f'Joint J{i+1} target out of limits: '
+                    f'target={value:.4f} rad ({self._rad_to_deg(value):.2f} deg), '
+                    f'allowed=[{lo:.4f}, {hi:.4f}] rad '
+                    f'([{self._rad_to_deg(lo):.2f}, {self._rad_to_deg(hi):.2f}] deg).')
+                return False
+
+        return True
+
+    # ------------------------------------------------------------------
+    # Motion helpers
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _deg2rad(deg: float) -> float:
+        return deg * math.pi / 180.0
+
+    def _move_to_init_pose(self):
+        """Move arm to the configured initial joint pose, with limit checks.
+
+        If the init pose exceeds joint limits or has wrong length the executor
+        enters ERROR and does not execute the move.
+        """
+        deg = self.get_parameter('init_joint_pos_deg').value
+
+        if len(deg) != 6:
+            self.get_logger().error(
+                f'init_joint_pos_deg length is {len(deg)}, expected 6. '
+                f'Executor entering ERROR; no init move performed.')
+            self._publish_executor_status(self.ERROR)
             return
 
-        if self.busy:
-            self.get_logger().warning('Executor is busy, skip this command.')
+        rad = [self._deg2rad(float(v)) for v in deg]
+
+        if not self._validate_joint_target(rad):
+            self.get_logger().error(
+                'init_joint_pos_deg violates joint limits. '
+                'Executor entering ERROR; no init move performed.')
+            self._publish_executor_status(self.ERROR)
             return
 
-        threading.Thread(
-            target=self.execute_command,
-            args=(msg,),
-            daemon=True
-        ).start()
-
-    def execute_command(self, msg: ArmCommand):
-        self.busy = True
-        self.last_command = msg.command_type
-        self.last_success = False
-        self.last_error = ''
-
+        self.get_logger().info(
+            f'Moving to init joint pose deg={[float(v) for v in deg]}')
         try:
-            command = msg.command_type.strip().upper()
-
-            if command == 'MOVE_JOINT':
-                if len(msg.joint_target) < 6:
-                    raise ValueError('MOVE_JOINT requires 6 joint values.')
-                ok = self.robot.move_joints_and_wait(
-                    joint_target=list(msg.joint_target[:6]),
-                    timeout_sec=8.0,
-                    tolerance_rad=0.03
-                )
-
-            elif command == 'MOVE_CART_KEEP_ORI':
-                if len(msg.cartesian_position) < 3:
-                    raise ValueError('MOVE_CART_KEEP_ORI requires 3 position values.')
-                ok = self.robot.move_cart_and_wait(
-                    target_xyz=list(msg.cartesian_position[:3]),
-                    keep_current_orientation=True,
-                    timeout_sec=8.0,
-                    tolerance_m=0.01
-                )
-
-            elif command == 'MOVE_CART':
-                if len(msg.cartesian_position) < 3:
-                    raise ValueError('MOVE_CART requires 3 position values.')
-                if len(msg.cartesian_orientation) < 4:
-                    raise ValueError('MOVE_CART requires 4 orientation values.')
-                ok = self.robot.move_cart_and_wait(
-                    target_xyz=list(msg.cartesian_position[:3]),
-                    keep_current_orientation=False,
-                    orientation=list(msg.cartesian_orientation[:4]),
-                    timeout_sec=8.0,
-                    tolerance_m=0.01
-                )
-
-            elif command == 'OPEN_GRIPPER':
-                self.robot.open_gripper()
-                ok = True
-
-            elif command == 'CLOSE_GRIPPER':
-                self.robot.close_gripper()
-                ok = True
-
-            elif command == 'GO_HOME':
-                ok = self.robot.move_joints_and_wait(
-                    joint_target=self.home_joint,
-                    timeout_sec=8.0,
-                    tolerance_rad=0.03
-                )
-
-            elif command == 'GO_SLEEP':
-                ok = self.robot.move_joints_and_wait(
-                    joint_target=self.sleep_joint,
-                    timeout_sec=8.0,
-                    tolerance_rad=0.03
-                )
-
-            else:
-                raise ValueError(f'Unsupported command_type: {msg.command_type}')
-
-            self.last_success = bool(ok)
-            if ok:
-                self.get_logger().info(f'Command succeeded: {msg.command_type}')
-            else:
-                self.last_error = f'Command timeout or target not reached: {msg.command_type}'
-                self.get_logger().error(self.last_error)
-
-        except Exception as e:
-            self.last_error = str(e)
-            self.last_success = False
-            self.get_logger().error(f'Command failed: {e}')
+            with self.sdk_lock:
+                self._publish_executor_status(self.BUSY)
+                self.arm.get_state()
+                self.arm.move_joints(rad)
+                self._publish_executor_status(self.DONE)
+            self.get_logger().info('Init pose reached.')
+        except Exception as exc:
+            self._set_error(f'Init pose failed: {exc}')
         finally:
-            self.busy = False
+            if self._get_executor_state() != self.ERROR:
+                self._publish_executor_status(self.IDLE)
 
-    def publish_feedback(self):
-        if not self.connected:
+    # ------------------------------------------------------------------
+    # Command callbacks
+    # ------------------------------------------------------------------
+
+    def joint_target_callback(self, msg: Float64MultiArray):
+        target = [float(v) for v in msg.data]
+        if len(target) != 6:
+            self.get_logger().error(
+                f'Invalid joint target length: {len(target)} (expected 6).')
             return
 
-        try:
-            joint_pos = self.robot.get_joint_pos()
-            pose = self.robot.get_end_pose()
-            if joint_pos is None or pose is None or len(pose) < 2:
+        # Full 6-joint limit validation — reject, never clamp.
+        if not self._validate_joint_target(target):
+            self.get_logger().error(
+                'Joint target rejected due to limit violation.')
+            self._publish_executor_status(self.REJECTED_INVALID_JOINT_LIMIT)
+            return
+
+        self._try_start_command('joint', target)
+
+    def cart_target_callback(self, msg: PointStamped):
+        frame_id = msg.header.frame_id.strip()
+        if frame_id and frame_id != 'base_link':
+            self.get_logger().error(
+                f'Invalid cart target frame_id={frame_id}; expected base_link.')
+            return
+        target = [float(msg.point.x), float(msg.point.y), float(msg.point.z)]
+        self._try_start_command('cartesian', target)
+
+    def gripper_callback(self, msg: String):
+        command = msg.data.strip().lower()
+        if command not in ('open', 'close'):
+            self.get_logger().error(f'Unknown gripper command: {command}')
+            return
+        self._try_start_command('gripper', command)
+
+    def speed_callback(self, msg: String):
+        profile = msg.data.strip().lower()
+        if profile not in ('slow', 'default', 'fast'):
+            self.get_logger().error(f'Unknown speed profile: {profile}')
+            return
+        self._try_start_command('speed_profile', profile)
+
+    def reset_callback(self, msg: String):
+        command = msg.data.strip().lower()
+        if command != 'clear_error':
+            self.get_logger().warning(f'Unknown reset_executor command: {command}')
+            return
+
+        with self.status_lock:
+            if self.executor_state != self.ERROR:
+                self.get_logger().info(
+                    f'clear_error received while executor is {self.executor_state}; no state change.')
+                self._publish_executor_status_locked(self.executor_state)
                 return
 
-            position = pose[0]
-            orientation = pose[1]
+            self.get_logger().warning('clear_error received; executor ERROR cleared to IDLE.')
+            self._publish_executor_status_locked(self.IDLE)
 
-            state_msg = ArmState()
-            state_msg.header.stamp = self.get_clock().now().to_msg()
-            state_msg.header.frame_id = 'base_link'
-            state_msg.arm_state = 'BUSY' if self.busy else 'IDLE'
-            state_msg.busy = self.busy
-            state_msg.success = self.last_success
-            state_msg.last_command = self.last_command
-            state_msg.error_message = self.last_error
-            state_msg.joint_pos = list(joint_pos)
-            state_msg.end_position = list(position)
-            state_msg.end_orientation = list(orientation)
-            self.state_pub.publish(state_msg)
+    # ------------------------------------------------------------------
+    # Command dispatch
+    # ------------------------------------------------------------------
+
+    def _try_start_command(self, command_type: str, payload: Any):
+        with self.status_lock:
+            if self.executor_state == self.ERROR:
+                self.get_logger().error(
+                    f'Executor is ERROR; reject {command_type} command.')
+                self._publish_executor_status_locked(self.ERROR)
+                return
+
+            if self.executor_state == self.BUSY:
+                self.get_logger().warning(
+                    f'Executor busy; reject {command_type} command: {payload}')
+                self._publish_executor_status_locked(self.REJECTED_BUSY)
+                self._publish_executor_status_locked(self.BUSY)
+                return
+
+            self.executor_state = self.BUSY
+            self.get_logger().info(f'Executor status: BUSY {command_type}')
+            self._publish_executor_status_locked(self.BUSY)
+
+        self.get_logger().info(f'Start {command_type} command: {payload}')
+        thread = threading.Thread(
+            target=self._execute_command,
+            args=(command_type, payload),
+            daemon=True,
+        )
+        self.active_thread = thread
+        thread.start()
+
+    def _execute_command(self, command_type: str, payload: Any):
+        try:
+            with self.sdk_lock:
+                if command_type == 'joint':
+                    self.arm.move_joints(payload)
+                elif command_type == 'cartesian':
+                    self.arm.move_to_cart_target_with_current_orientation(payload)
+                elif command_type == 'gripper':
+                    if payload == 'open':
+                        self.arm.open_gripper()
+                    else:
+                        self.arm.close_gripper()
+                elif command_type == 'speed_profile':
+                    self.arm.set_speed_profile(payload)
+                else:
+                    raise ValueError(f'Unsupported command type: {command_type}')
+
+            self.get_logger().info(f'{command_type} command done.')
+            self.get_logger().info(f'Executor status: DONE {command_type}')
+            self._publish_executor_status(self.DONE)
+        except Exception as exc:
+            self._set_error(f'{command_type} command failed: {exc}')
+            return
+
+        self._publish_executor_status(self.IDLE)
+
+    # ------------------------------------------------------------------
+    # State publishing
+    # ------------------------------------------------------------------
+
+    def publish_state(self):
+        """Publish joint state and end-effector pose if the SDK can be sampled."""
+        if not self.sdk_lock.acquire(blocking=False):
+            if self.last_state_msg is not None:
+                busy_msg = self._copy_state_msg(self.last_state_msg)
+                busy_msg.state = self.BUSY
+                self.state_pub.publish(busy_msg)
+            if self.last_pose_msg is not None:
+                self.end_pose_pub.publish(self.last_pose_msg)
+            return
+
+        try:
+            msg = ArmJointState()
+            msg.state = str(self.arm.get_state())
+            msg.joint_pos = list(self.arm.get_joint_pos())
+            msg.joint_vel = list(self.arm.get_joint_vel())
+
+            end_pose = self.arm.get_end_pose()
+            position = list(end_pose[0])
+            quaternion = list(end_pose[1])
+            msg.end_pose = position + quaternion
+
+            self.last_state_msg = self._copy_state_msg(msg)
+            self.state_pub.publish(msg)
 
             pose_msg = PoseStamped()
-            pose_msg.header.stamp = state_msg.header.stamp
+            pose_msg.header.stamp = self.get_clock().now().to_msg()
             pose_msg.header.frame_id = 'base_link'
             pose_msg.pose.position.x = float(position[0])
             pose_msg.pose.position.y = float(position[1])
             pose_msg.pose.position.z = float(position[2])
-            pose_msg.pose.orientation.x = float(orientation[0])
-            pose_msg.pose.orientation.y = float(orientation[1])
-            pose_msg.pose.orientation.z = float(orientation[2])
-            pose_msg.pose.orientation.w = float(orientation[3])
-            self.pose_pub.publish(pose_msg)
+            pose_msg.pose.orientation.x = float(quaternion[0])
+            pose_msg.pose.orientation.y = float(quaternion[1])
+            pose_msg.pose.orientation.z = float(quaternion[2])
+            pose_msg.pose.orientation.w = float(quaternion[3])
+            self.last_pose_msg = pose_msg
+            self.end_pose_pub.publish(pose_msg)
+        except Exception as exc:
+            self._set_error(f'Failed to publish arm state: {exc}')
+        finally:
+            self.sdk_lock.release()
 
-        except Exception as e:
-            self.get_logger().error(f'Failed to publish feedback: {e}')
+    # ------------------------------------------------------------------
+    # Internal state helpers
+    # ------------------------------------------------------------------
+
+    def _get_executor_state(self) -> str:
+        with self.status_lock:
+            return self.executor_state
+
+    def _publish_executor_status(self, status: str):
+        with self.status_lock:
+            self._publish_executor_status_locked(status)
+
+    def _publish_executor_status_locked(self, status: str):
+        self.executor_state = status
+        msg = String()
+        msg.data = status
+        self.executor_status_pub.publish(msg)
+
+    def _set_error(self, message: str):
+        self.get_logger().error(message)
+        self._publish_executor_status(self.ERROR)
+
+    def _copy_state_msg(self, msg: ArmJointState) -> ArmJointState:
+        copied = ArmJointState()
+        copied.state = msg.state
+        copied.joint_pos = list(msg.joint_pos)
+        copied.joint_vel = list(msg.joint_vel)
+        copied.end_pose = list(msg.end_pose)
+        return copied
 
     def destroy_node(self):
-        if self.connected:
+        if self.active_thread is not None and self.active_thread.is_alive():
+            self.active_thread.join(timeout=1.0)
+        if self.sdk_lock.acquire(timeout=1.0):
             try:
-                self.robot.disconnect()
-            except Exception as e:
-                self.get_logger().warning(f'Failed to disconnect cleanly: {e}')
+                self.arm.disconnect()
+            except Exception:
+                pass
+            finally:
+                self.sdk_lock.release()
+        else:
+            self.get_logger().warning(
+                'SDK command still running; skip disconnect on shutdown.')
         super().destroy_node()
 
 

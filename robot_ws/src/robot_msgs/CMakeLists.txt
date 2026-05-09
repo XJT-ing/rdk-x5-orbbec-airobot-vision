@@ -9,11 +9,10 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/ArmJointTarget.msg"
   "msg/ArmJointState.msg"
   "msg/GripperCommand.msg"
-  "msg/ArmCommand.msg"
-  "msg/ArmState.msg"
+  "msg/CameraTarget.msg"
+  "msg/VisualTarget.msg"
   DEPENDENCIES std_msgs
 )
 
 ament_export_dependencies(rosidl_default_runtime)
-
 ament_package()

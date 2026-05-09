@@ -277,18 +277,45 @@ private:
             }
         }
 
-        cv::Mat blur, hsv, mask1, mask2, mask;
+        cv::Mat blur, hsv;
+        cv::Mat mask_hsv1, mask_hsv2, mask_hsv;
+        cv::Mat mask_bgr, mask;
+        
         cv::GaussianBlur(image, blur, cv::Size(5, 5), 0);
         cv::cvtColor(blur, hsv, cv::COLOR_BGR2HSV);
+        
+        cv::inRange(hsv, cv::Scalar(170, 130, 70), cv::Scalar(180, 255, 255), mask_hsv);
+        
+        // BGR 约束：R 通道必须明显强于 G 和 B
+        std::vector<cv::Mat> bgr;
+        cv::split(blur, bgr);   // bgr[0]=B, bgr[1]=G, bgr[2]=R
+        
+        cv::Mat b16, g16, r16;
+        bgr[0].convertTo(b16, CV_16S);
+        bgr[1].convertTo(g16, CV_16S);
+        bgr[2].convertTo(r16, CV_16S);
+        
+        cv::Mat red_bright, red_gt_green, red_gt_blue;
+        cv::threshold(bgr[2], red_bright, 150, 255, cv::THRESH_BINARY);
 
-        // 放宽苹果红色范围，兼容粉红、浅红和高光
-        cv::inRange(hsv, cv::Scalar(0, 45, 45), cv::Scalar(20, 255, 255), mask1);
-        cv::inRange(hsv, cv::Scalar(155, 40, 40), cv::Scalar(180, 255, 255), mask2);
-        mask = mask1 | mask2;
+        cv::Mat g_plus, b_plus;
+        cv::add(g16, cv::Scalar(85), g_plus);
+        cv::add(b16, cv::Scalar(45), b_plus);
+        
+        cv::compare(r16, g_plus, red_gt_green, cv::CMP_GT);
+        cv::compare(r16, b_plus, red_gt_blue, cv::CMP_GT);
+        
+        mask_bgr = red_bright & red_gt_green & red_gt_blue;
+        
+        // 最终红色区域：必须同时满足 HSV 红色范围和 BGR 红色优势
+        mask = mask_hsv & mask_bgr;
 
-        cv::Mat kernel = cv::getStructuringElement(cv::MORPH_ELLIPSE, {5, 5});
-        cv::morphologyEx(mask, mask, cv::MORPH_CLOSE, kernel);
-        cv::morphologyEx(mask, mask, cv::MORPH_OPEN, kernel);
+        cv::Mat kernel_small = cv::getStructuringElement(cv::MORPH_ELLIPSE, {3, 3});
+        cv::Mat kernel_big = cv::getStructuringElement(cv::MORPH_ELLIPSE, {5, 5});
+        
+        // 先开运算去掉小噪声，再闭运算填补苹果内部小孔
+        cv::morphologyEx(mask, mask, cv::MORPH_OPEN, kernel_small);
+        cv::morphologyEx(mask, mask, cv::MORPH_CLOSE, kernel_big);
 
         std::vector<std::vector<cv::Point>> contours;
         cv::findContours(mask, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
@@ -296,22 +323,57 @@ private:
         double best_score = -1.0;
         int best = -1;
 
+        double img_area = static_cast<double>(image.cols * image.rows);
+
         for (int i = 0; i < static_cast<int>(contours.size()); ++i) {
             double area = cv::contourArea(contours[i]);
+        
+            // 太小的是噪声，太大的通常是脸、衣服、背景误检
             if (area < 300) continue;
-
+            if (area > img_area * 0.12) continue;
+        
             cv::Rect rect = cv::boundingRect(contours[i]);
+        
             if (rect.x <= 2 || rect.y <= 2 ||
                 rect.x + rect.width >= image.cols - 2 ||
                 rect.y + rect.height >= image.rows - 2) {
                 continue;
             }
-
+            
+            // 苹果在画面中应该有一定尺寸，小红点、小反光直接排除
+            if (rect.width < 35 || rect.height < 35) continue;
+        
+            double aspect = static_cast<double>(rect.width) / static_cast<double>(rect.height);
+            if (aspect < 0.55 || aspect > 1.8) continue;
+        
             double peri = cv::arcLength(contours[i], true);
             double circularity = (peri > 1e-6) ? (4.0 * CV_PI * area / (peri * peri)) : 0.0;
-            if (circularity < 0.22) continue;
-
-            double score = area + 1200.0 * circularity;
+            // 当前轮廓单独生成 mask，用来检查颜色是否真的像红苹果
+            cv::Mat candidate_mask = cv::Mat::zeros(mask.size(), CV_8UC1);
+            cv::drawContours(candidate_mask, contours, i, cv::Scalar(255), cv::FILLED);
+            
+            // 计算候选区域的 BGR 平均颜色
+            cv::Scalar mean_bgr = cv::mean(blur, candidate_mask);
+            double mean_b = mean_bgr[0];
+            double mean_g = mean_bgr[1];
+            double mean_r = mean_bgr[2];
+            
+            // 红苹果应该满足：R 很高，且 R 明显大于 G 和 B
+            // 黄橙色物体通常 G 也比较高，因此会被 R-G 条件排除
+            if (mean_r < 150) continue;
+            if (mean_r - mean_g < 85) continue;
+            if (mean_r - mean_b < 35) continue;
+            
+            // 检查候选区域中红色像素占矩形区域的比例
+            double fill_ratio = area / static_cast<double>(rect.width * rect.height);
+            if (fill_ratio < 0.35) continue;
+        
+            // 苹果一般更接近圆形，肤色区域、手臂、头发轮廓通常不够圆
+            if (circularity < 0.55) continue;
+        
+            // 不再单纯偏向“大面积”，而是综合面积和圆度
+            double score = area * circularity;
+        
             if (score > best_score) {
                 best_score = score;
                 best = i;
@@ -386,7 +448,7 @@ private:
         std::snprintf(buf2, sizeof(buf2), "X=%.3f Y=%.3f Z=%.3f m", X, Y, Z);
         drawTextLine(display, buf1, 20, 65);
         drawTextLine(display, buf2, 20, 95);
-        showFrame(display, mask);
+        showFrame(display, obj_mask);
 
         RCLCPP_INFO_THROTTLE(
             this->get_logger(), *this->get_clock(), 500,

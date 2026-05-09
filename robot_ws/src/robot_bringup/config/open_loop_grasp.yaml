@@ -1,0 +1,66 @@
+# 开环抓取参数配置。
+#
+# 默认数据流：
+#   Orbbec_ws 直接发布 base_link 坐标系下的 /visual_target_base。
+#   robot_tasks/grasp_task_open_loop 消费该目标，并向
+#   robot_arm_driver/arm_executor_node 下发机械臂命令。
+
+arm_executor_node:
+  ros__parameters:
+    do_init: true
+    init_joint_pos_deg: [0.0, -45.0, 120.0, -90.0, 90.0, 90.0]
+
+    # Conservative AIRBOT Play joint limits.
+    # Confirm the exact hardware model before widening these values.
+    # J1 [-180°, +120°], J2 [-170°, +10°], J3 [-5°, +180°],
+    # J4 [-148°, +148°], J5 [-100°, +100°], J6 [-170°, +170°].
+    joint_min_rad: [-3.1416, -2.9671, -0.0873, -2.5831, -1.7453, -2.9671]
+    joint_max_rad: [ 2.0944,  0.1745,  3.1416,  2.5831,  1.7453,  2.9671]
+
+grasp_task_open_loop:
+  ros__parameters:
+    base_frame: base_link
+    allow_empty_target_frame: false
+
+    pre_grasp_z_offset: 0.12
+    grasp_z_offset: 0.0
+    lift_z_offset: 0.10
+    safe_pose: [0.35, 0.0, 0.35]
+    joint6_compensation_deg: 90.0
+    # Conservative J6 range based on AIRBOT Play official specs.
+    # Confirm exact hardware model before widening this range.
+    joint6_min_rad: -2.9671
+    joint6_max_rad: 2.9671
+
+    confidence_threshold: 0.7
+    stable_frame_count: 5
+    stable_frame_count_required: 5
+    stable_position_threshold: 0.015
+    stable_position_threshold_m: 0.015
+    stable_depth_threshold_m: 0.03
+    target_timeout_sec: 1.0
+    end_pose_timeout_sec: 1.0
+
+    workspace_limits:
+      x_min: 0.10
+      x_max: 1.00
+      y_min: -0.45
+      y_max: 0.50
+      z_min: 0.02
+      z_max: 0.70
+
+    position_tolerance: 0.02
+    position_tolerance_m: 0.02
+    settle_time_sec: 0.5
+    joint_speed_safe_threshold: 0.1
+    post_joint_rotate_settle_sec: 0.5
+    gripper_settle_sec: 1.0
+
+    wait_pre_target_timeout_sec: 15.0
+    wait_grasp_target_timeout_sec: 8.0
+    motion_timeout_sec: 12.0
+    set_orientation_timeout_sec: 8.0
+    close_gripper_timeout_sec: 4.0
+    recover_timeout_sec: 15.0
+    rejected_busy_recover_threshold: 2
+    loop_hz: 4.0

@@ -1,0 +1,128 @@
+"""Shared grasp waypoint planner.
+
+The planner converts a stable 3D target into simple Cartesian waypoints used by
+the open-loop and visual-servo task nodes. It also computes the pre-grasp joint6
+orientation compensation while respecting configured joint limits.
+"""
+
+import math
+from typing import Optional
+
+
+class GraspPlanner:
+    """Generate staged Cartesian waypoints from a target in base_link."""
+
+    def __init__(self, config: dict):
+        self.pre_grasp_z_offset = config.get('pre_grasp_z_offset', 0.12)
+        self.grasp_z_offset = config.get('grasp_z_offset', 0.0)
+        self.lift_z_offset = config.get('lift_z_offset', 0.10)
+        self.safe_pose = config.get('safe_pose', [0.35, 0.00, 0.35])
+        self.joint6_compensation_deg = config.get('joint6_compensation_deg', 90.0)
+        # Conservative J6 range based on AIRBOT Play official specs.
+        # Confirm exact hardware model before widening these defaults.
+        self.joint6_min_rad = float(config.get('joint6_min_rad', -2.9671))
+        self.joint6_max_rad = float(config.get('joint6_max_rad', 2.9671))
+
+        limits = config.get('workspace_limits', {})
+        self.x_min = limits.get('x_min', 0.10)
+        self.x_max = limits.get('x_max', 1.00)
+        self.y_min = limits.get('y_min', -0.45)
+        self.y_max = limits.get('y_max', 0.50)
+        self.z_min = limits.get('z_min', 0.02)
+        self.z_max = limits.get('z_max', 0.70)
+
+    def compute_pre_grasp(self, target_xyz: list) -> list:
+        """Return the pre-grasp point above the target."""
+        return self._clamp([
+            target_xyz[0],
+            target_xyz[1],
+            target_xyz[2] + self.pre_grasp_z_offset,
+        ])
+
+    def compute_grasp(self, target_xyz: list) -> list:
+        """Return the final grasp point near the target."""
+        return self._clamp([
+            target_xyz[0],
+            target_xyz[1],
+            target_xyz[2] + self.grasp_z_offset,
+        ])
+
+    def compute_lift(self, current_xyz: list) -> list:
+        """Return a vertical lift target based on the current end-effector pose."""
+        return self._clamp([
+            current_xyz[0],
+            current_xyz[1],
+            min(current_xyz[2] + self.lift_z_offset, self.z_max),
+        ])
+
+    def get_safe_pose(self) -> list:
+        """Return the configured safe retreat pose."""
+        return list(self.safe_pose)
+
+    @staticmethod
+    def distance(a: list, b: list) -> float:
+        """Return Euclidean distance between two 3D points."""
+        return math.sqrt(
+            (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2
+        )
+
+    @staticmethod
+    def limit_step(current: list, target: list, max_step: float) -> list:
+        """Limit a Cartesian step so a single command does not jump too far."""
+        distance = GraspPlanner.distance(current, target)
+        if distance <= max_step:
+            return target
+        ratio = max_step / distance
+        return [
+            current[0] + (target[0] - current[0]) * ratio,
+            current[1] + (target[1] - current[1]) * ratio,
+            current[2] + (target[2] - current[2]) * ratio,
+        ]
+
+    @staticmethod
+    def reached(current: list, target: list, threshold: float = 0.03) -> bool:
+        """Return True when current position is close enough to target."""
+        return GraspPlanner.distance(current, target) < threshold
+
+    @property
+    def joint6_compensation_rad(self) -> float:
+        """Return the configured joint6 compensation in radians."""
+        return math.radians(self.joint6_compensation_deg)
+
+    def compute_joint6_target(self, current_joint_pos: list) -> Optional[list]:
+        """Choose a safe joint6 compensation direction.
+
+        Both +offset and -offset candidates are checked against joint6 limits. If
+        both are valid, choose the one farther from the nearest limit. If neither
+        is valid, return None so the task can enter recovery.
+        """
+        if len(current_joint_pos) < 6:
+            return None
+
+        current_j6 = float(current_joint_pos[5])
+        offset = self.joint6_compensation_rad
+        candidates = [current_j6 + offset, current_j6 - offset]
+        valid = [
+            value for value in candidates
+            if self.joint6_min_rad <= value <= self.joint6_max_rad
+        ]
+
+        if not valid:
+            return None
+
+        selected = max(valid, key=self._joint6_limit_margin)
+        target = list(current_joint_pos[:])
+        target[5] = selected
+        return target
+
+    def _joint6_limit_margin(self, value: float) -> float:
+        """Return distance from the closest joint6 limit."""
+        return min(value - self.joint6_min_rad, self.joint6_max_rad - value)
+
+    def _clamp(self, xyz: list) -> list:
+        """Clamp a Cartesian point into the configured workspace."""
+        return [
+            min(max(float(xyz[0]), self.x_min), self.x_max),
+            min(max(float(xyz[1]), self.y_min), self.y_max),
+            min(max(float(xyz[2]), self.z_min), self.z_max),
+        ]

@@ -34,6 +34,7 @@ HAS_FACE_TOPIC = "/emotion/has_face"
 
 IMG_SIZE = 224
 SHOW_LOCAL_WINDOW = os.environ.get("SHOW_EMOTION_WINDOW", "1") == "1"
+DEBUG_EMOTION = os.environ.get("DEBUG_EMOTION", "0") == "1"
 WINDOW_NAME = "Gemini2 Emotion Debug"
 
 FACE_SCORE_THRESHOLD = 0.65
@@ -86,6 +87,29 @@ def enhance_for_face_detection(color_bgr: np.ndarray) -> np.ndarray:
     return cv2.cvtColor(gray_eq, cv2.COLOR_GRAY2BGR)
 
 
+def read_attr(obj, *names, default=None):
+    for name in names:
+        if hasattr(obj, name):
+            try:
+                return getattr(obj, name)
+            except Exception:
+                pass
+    return default
+
+
+def shape_to_list(shape):
+    if shape is None:
+        return []
+    if isinstance(shape, (list, tuple)):
+        return [int(v) for v in shape]
+    if hasattr(shape, "__iter__") and not isinstance(shape, str):
+        try:
+            return [int(v) for v in shape]
+        except Exception:
+            return []
+    return []
+
+
 class Gemini2EmotionNode(Node):
     def __init__(self):
         super().__init__("gemini2_emotion_x5")
@@ -105,6 +129,9 @@ class Gemini2EmotionNode(Node):
 
         self.detector = create_face_detector(YUNET_PATH)
         self.model = dnn.load(BIN_PATH)[0]
+        self.input_layout = self.detect_input_layout()
+        self._io_logged = False
+        self._debug_count = 0
 
         self.recent_results = deque(maxlen=STABLE_WINDOW_SIZE)
 
@@ -119,9 +146,64 @@ class Gemini2EmotionNode(Node):
         self.get_logger().info(f"Loaded labels: {LABEL_PATH}")
         self.get_logger().info(f"Loaded YuNet: {YUNET_PATH}")
         self.get_logger().info(f"Subscribed topic: {COLOR_TOPIC}")
+        self.get_logger().info(f"Using emotion model input layout: {self.input_layout}")
+        self.log_model_io()
 
         if SHOW_LOCAL_WINDOW:
             cv2.namedWindow(WINDOW_NAME, cv2.WINDOW_NORMAL)
+
+    def detect_input_layout(self) -> str:
+        """Return NCHW or NHWC when the model metadata makes it clear."""
+        try:
+            inputs = read_attr(self.model, "inputs", "input_tensors", default=[])
+            if not inputs:
+                return "NCHW"
+            item = inputs[0]
+            layout = str(read_attr(item, "layout", "tensor_layout", default="")).upper()
+            if "NHWC" in layout:
+                return "NHWC"
+            if "NCHW" in layout:
+                return "NCHW"
+
+            shape = shape_to_list(read_attr(item, "shape", "valid_shape", default=None))
+            if len(shape) == 4:
+                if shape[-1] == 3:
+                    return "NHWC"
+                if shape[1] == 3:
+                    return "NCHW"
+        except Exception:
+            pass
+        return "NCHW"
+
+    def log_model_io(self):
+        """Print model input/output metadata exposed by hobot_dnn."""
+        try:
+            inputs = read_attr(self.model, "inputs", "input_tensors", default=[])
+            outputs = read_attr(self.model, "outputs", "output_tensors", default=[])
+            self.get_logger().info(f"Model input count: {len(inputs)}")
+            for i, item in enumerate(inputs):
+                name = read_attr(item, "name", default="unknown")
+                shape = read_attr(item, "shape", "valid_shape", "aligned_shape", default="unknown")
+                layout = read_attr(item, "layout", "tensor_layout", default="unknown")
+                dtype = read_attr(item, "dtype", "data_type", default="unknown")
+                qtype = read_attr(item, "quanti_type", "quant_type", default="unknown")
+                scale = read_attr(item, "scale_data", "scale", default="unknown")
+                self.get_logger().info(
+                    f"Input[{i}] name={name}, shape={shape}, layout={layout}, dtype={dtype}, "
+                    f"quant={qtype}, scale={scale}")
+            self.get_logger().info(f"Model output count: {len(outputs)}")
+            for i, item in enumerate(outputs):
+                name = read_attr(item, "name", default="unknown")
+                shape = read_attr(item, "shape", "valid_shape", "aligned_shape", default="unknown")
+                layout = read_attr(item, "layout", "tensor_layout", default="unknown")
+                dtype = read_attr(item, "dtype", "data_type", default="unknown")
+                qtype = read_attr(item, "quanti_type", "quant_type", default="unknown")
+                scale = read_attr(item, "scale_data", "scale", default="unknown")
+                self.get_logger().info(
+                    f"Output[{i}] name={name}, shape={shape}, layout={layout}, dtype={dtype}, "
+                    f"quant={qtype}, scale={scale}")
+        except Exception as exc:
+            self.get_logger().warning(f"Failed to inspect model IO metadata: {exc}")
 
     def preprocess_face(self, face_bgr: np.ndarray) -> np.ndarray:
         rgb = cv2.cvtColor(face_bgr, cv2.COLOR_BGR2RGB)
@@ -134,12 +216,19 @@ class Gemini2EmotionNode(Node):
         std = np.array([0.229, 0.224, 0.225], dtype=np.float32)
         img = (img - mean) / std
 
-        img = np.transpose(img, (2, 0, 1))
+        if self.input_layout == "NCHW":
+            img = np.transpose(img, (2, 0, 1))
         img = np.expand_dims(img, axis=0)
         return img.astype(np.float32)
 
     def infer_emotion(self, face_bgr: np.ndarray):
         x = self.preprocess_face(face_bgr)
+
+        if DEBUG_EMOTION and self._debug_count < 20:
+            self.get_logger().info(
+                f"Input stats: shape={x.shape}, dtype={x.dtype}, "
+                f"min={float(np.min(x)):.4f}, max={float(np.max(x)):.4f}, "
+                f"mean={float(np.mean(x)):.4f}, std={float(np.std(x)):.4f}")
 
         try:
             outputs = self.model.forward(x)
@@ -148,7 +237,23 @@ class Gemini2EmotionNode(Node):
 
         out0 = outputs[0] if isinstance(outputs, (list, tuple)) else outputs
         logits = np.array(out0.buffer, dtype=np.float32).reshape(-1)
+        if logits.size > len(self.class_names):
+            if DEBUG_EMOTION and self._debug_count < 20:
+                self.get_logger().warning(
+                    f"Output buffer has {logits.size} values, using first {len(self.class_names)} classes")
+            logits = logits[:len(self.class_names)]
         probs = softmax(logits)
+
+        if DEBUG_EMOTION and self._debug_count < 20:
+            pairs = ", ".join(
+                f"{name}={float(probs[i]):.4f}"
+                for i, name in enumerate(self.class_names)
+                if i < len(probs)
+            )
+            self.get_logger().info(
+                f"Output logits={np.array2string(logits, precision=4, separator=', ')}, "
+                f"probs: {pairs}")
+            self._debug_count += 1
 
         pred_idx = int(np.argmax(probs))
         pred_name = self.class_names[pred_idx]

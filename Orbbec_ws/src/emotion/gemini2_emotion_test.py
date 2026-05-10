@@ -35,6 +35,7 @@ HAS_FACE_TOPIC = "/emotion/has_face"
 IMG_SIZE = 224
 SHOW_LOCAL_WINDOW = os.environ.get("SHOW_EMOTION_WINDOW", "1") == "1"
 DEBUG_EMOTION = os.environ.get("DEBUG_EMOTION", "0") == "1"
+EMOTION_PREPROCESS = os.environ.get("EMOTION_PREPROCESS", "imagenet").lower()
 WINDOW_NAME = "Gemini2 Emotion Debug"
 
 FACE_SCORE_THRESHOLD = 0.65
@@ -147,6 +148,7 @@ class Gemini2EmotionNode(Node):
         self.get_logger().info(f"Loaded YuNet: {YUNET_PATH}")
         self.get_logger().info(f"Subscribed topic: {COLOR_TOPIC}")
         self.get_logger().info(f"Using emotion model input layout: {self.input_layout}")
+        self.get_logger().info(f"Using emotion preprocess mode: {EMOTION_PREPROCESS}")
         self.log_model_io()
 
         if SHOW_LOCAL_WINDOW:
@@ -210,11 +212,22 @@ class Gemini2EmotionNode(Node):
         gray = cv2.cvtColor(rgb, cv2.COLOR_RGB2GRAY)
         gray3 = np.stack([gray, gray, gray], axis=-1)
 
-        img = cv2.resize(gray3, (IMG_SIZE, IMG_SIZE)).astype(np.float32) / 255.0
+        img = cv2.resize(gray3, (IMG_SIZE, IMG_SIZE)).astype(np.float32)
 
-        mean = np.array([0.485, 0.456, 0.406], dtype=np.float32)
-        std = np.array([0.229, 0.224, 0.225], dtype=np.float32)
-        img = (img - mean) / std
+        if EMOTION_PREPROCESS == "imagenet":
+            img = img / 255.0
+            mean = np.array([0.485, 0.456, 0.406], dtype=np.float32)
+            std = np.array([0.229, 0.224, 0.225], dtype=np.float32)
+            img = (img - mean) / std
+        elif EMOTION_PREPROCESS == "zero_one":
+            img = img / 255.0
+        elif EMOTION_PREPROCESS == "minus_one_one":
+            img = img / 127.5 - 1.0
+        elif EMOTION_PREPROCESS == "uint8":
+            pass
+        else:
+            raise ValueError(
+                "Unsupported EMOTION_PREPROCESS. Use imagenet, zero_one, minus_one_one, or uint8.")
 
         if self.input_layout == "NCHW":
             img = np.transpose(img, (2, 0, 1))

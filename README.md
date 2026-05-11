@@ -10,31 +10,50 @@
 
 ## 快速开始
 
-编译机械臂工作区：
+## 推荐实机启动顺序
 
-```bash
-cd ~/robot/airbot-vision-grasping/robot_ws
-source /opt/ros/humble/setup.bash
-colcon build --symlink-install
-source install/setup.bash
-```
-
-启动 AIRBOT 服务：
+终端 0：启动 AIRBOT 服务。
 
 ```bash
 sudo airbot_server -i can1 -p 50001
 ```
 
-启动机械臂侧开环抓取流程：
+终端 1：启动 Orbbec 相机。
 
 ```bash
-cd ~/robot/airbot-vision-grasping/robot_ws
 source /opt/ros/humble/setup.bash
-source install/setup.bash
+source /home/sunrise/robot/Orbbec_ws/install/setup.bash
+ros2 launch orbbec_camera gemini2.launch.py
+```
+
+终端 2：启动检测节点。
+
+```bash
+source /opt/ros/humble/setup.bash
+source /home/sunrise/robot/Orbbec_ws/install/setup.bash
+ros2 run detector apple_detector_node
+ros2 run detector box_detector_node
+ros2 run detector duck_detector_node
+```
+
+终端 3：启动机械臂执行器和开环抓取任务。
+
+```bash
+source /opt/ros/humble/setup.bash
+source /home/sunrise/robot/airbot-vision-grasping/robot_ws/install/setup.bash
 ros2 launch robot_bringup open_loop_grasp.launch.py
 ```
 
-单独启动 Orbbec 视觉流程，并确保它发布：
+终端 4：启动相机坐标到 base_link 的转换桥。
+
+注意：这里必须 source `robot_ws/install/setup.bash`，否则 `robot_msgs/msg/VisualTarget` 不可见。
+
+```bash
+source /opt/ros/humble/setup.bash
+source /home/sunrise/robot/Orbbec_ws/install/setup.bash
+source /home/sunrise/robot/airbot-vision-grasping/robot_ws/install/setup.bash
+python3 /home/sunrise/robot/airbot-vision-grasping/hand_to_eye/camera_to_base_transform.py
+```
 
 ```text
 /visual_target_base  robot_msgs/msg/VisualTarget  frame_id=base_link

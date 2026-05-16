@@ -1,0 +1,672 @@
+[INFO] [1778527952.629347394] [camera_to_base_transformer]: CameraToBaseTransformer started. Listening: /robot_arm/end_pose, /duck_position, /apple_position, /box_position
+[INFO] [1778527952.634286846] [camera_to_base_transformer]: Publishing: /visual_target_base (robot_msgs/msg/VisualTarget)
+[INFO] [1778527952.637483341] [camera_to_base_transformer]: Using ^gT_c translation=[-0.0830395307186257, 0.008112286716840913, 0.08580828291231507], quaternion_xyzw=[-0.49270434706957716, 0.5001884081237661, -0.49995706645552335, 0.5070472507158893]
+[INFO] [1778527952.641352295] [camera_to_base_transformer]: target_frame=base_link, allowed_camera_frames=['camera_color_optical_frame'], max_end_pose_age_sec=0.50, default_confidence=0.85, assume_target_stable=True, republish_rate_hz=1.00, target_hold_sec=0.00
+[INFO] [1778527952.652100239] [camera_to_base_transformer]: box from /box_position: camera=(-0.002, 0.080, 0.252) base=(0.399, 0.011, 0.457)
+[INFO] [1778527953.197206243] [camera_to_base_transformer]: box from /box_position: camera=(-0.002, 0.080, 0.252) base=(0.399, 0.011, 0.457)
+[INFO] [1778527953.707750417] [camera_to_base_transformer]: box from /box_position: camera=(-0.002, 0.080, 0.252) base=(0.399, 0.011, 0.457)
+[INFO] [1778527954.231592407] [camera_to_base_transformer]: box from /box_position: camera=(-0.002, 0.080, 0.252) base=(0.399, 0.011, 0.457)
+[INFO] [1778527954.777436702] [camera_to_base_transformer]: box from /box_position: camera=(-0.002, 0.080, 0.252) base=(0.399, 0.011, 0.457)
+[INFO] [1778527955.295361033] [camera_to_base_transformer]: box from /box_position: camera=(-0.002, 0.080, 0.252) base=(0.399, 0.011, 0.457)
+[INFO] [1778527955.795733011] [camera_to_base_transformer]: box from /box_position: camera=(-0.002, 0.080, 0.252) base=(0.399, 0.011, 0.457)
+[INFO] [1778527956.326734658] [camera_to_base_transformer]: box from /box_position: camera=(-0.002, 0.080, 0.252) base=(0.399, 0.011, 0.457)
+[INFO] [1778527956.879855527] [camera_to_base_transformer]: box from /box_position: camera=(-0.002, 0.079, 0.252) base=(0.399, 0.011, 0.457)
+[INFO] [1778527957.379932631] [camera_to_base_transformer]: box from /box_position: camera=(0.010, 0.073, 0.251) base=(0.401, -0.002, 0.464)
+[INFO] [1778527957.924107428] [camera_to_base_transformer]: box from /box_position: camera=(0.014, 0.073, 0.250) base=(0.395, 0.015, 0.454)
+[INFO] [1778527958.434666143] [camera_to_base_transformer]: box from /box_position: camera=(0.017, 0.071, 0.256) base=(0.402, 0.018, 0.454)
+[INFO] [1778527958.995416085] [camera_to_base_transformer]: box from /box_position: camera=(0.010, 0.063, 0.213) base=(0.420, 0.019, 0.458)
+[INFO] [1778527959.578961122] [camera_to_base_transformer]: box from /box_position: camera=(-0.004, 0.064, 0.193) base=(0.395, 0.018, 0.455)
+[INFO] [1778527960.157314333] [camera_to_base_transformer]: box from /box_position: camera=(-0.004, 0.065, 0.195) base=(0.397, 0.018, 0.455)
+[WARN] [1778527962.459732023] [camera_to_base_transformer]: No new detector input for 2.01s.
+[WARN] [1778527962.474752253] [camera_to_base_transformer]: No new visual target for 2.01s.
+[WARN] [1778527965.460022435] [camera_to_base_transformer]: No new detector input for 5.01s.
+[WARN] [1778527965.471971294] [camera_to_base_transformer]: No new visual target for 5.01s.
+[WARN] [1778527967.460474305] [camera_to_base_transformer]: No new detector input for 7.01s.
+[WARN] [1778527967.464917258] [camera_to_base_transformer]: No new visual target for 7.01s.
+[WARN] [1778527970.458331302] [camera_to_base_transformer]: No new detector input for 10.01s.
+[WARN] [1778527970.465204210] [camera_to_base_transformer]: No new visual target for 10.01s.
+[WARN] [1778527973.458393961] [camera_to_base_transformer]: No new detector input for 13.01s.
+[WARN] [1778527973.464156329] [camera_to_base_transformer]: No new visual target for 13.01s.
+[INFO] [1778527974.388147216] [camera_to_base_transformer]: box from /box_position: camera=(-0.004, 0.083, 0.236) base=(0.524, 0.054, 0.387)
+[INFO] [1778527974.945882202] [camera_to_base_transformer]: box from /box_position: camera=(-0.004, 0.080, 0.252) base=(0.538, 0.057, 0.380)
+[INFO] [1778527975.498536987] [camera_to_base_transformer]: box from /box_position: camera=(-0.002, 0.079, 0.252) base=(0.399, 0.012, 0.457)
+[INFO] [1778527976.007680953] [camera_to_base_transformer]: box from /box_position: camera=(-0.003, 0.078, 0.252) base=(0.400, 0.012, 0.457)
+[INFO] [1778527976.523561951] [camera_to_base_transformer]: box from /box_position: camera=(-0.003, 0.078, 0.252) base=(0.400, 0.012, 0.457)
+[INFO] [1778527977.056955177] [camera_to_base_transformer]: box from /box_position: camera=(-0.003, 0.079, 0.252) base=(0.399, 0.012, 0.457)
+[INFO] [1778527977.562626231] [camera_to_base_transformer]: box from /box_position: camera=(-0.002, 0.082, 0.247) base=(0.393, 0.012, 0.456)
+[INFO] [1778527978.067414827] [camera_to_base_transformer]: box from /box_position: camera=(-0.026, 0.081, 0.248) base=(0.395, 0.035, 0.457)
+[INFO] [1778527978.568270720] [camera_to_base_transformer]: box from /box_position: camera=(-0.023, 0.082, 0.244) base=(0.391, 0.032, 0.457)
+[INFO] [1778527979.101577488] [camera_to_base_transformer]: box from /box_position: camera=(-0.022, 0.083, 0.242) base=(0.389, 0.031, 0.457)
+[INFO] [1778527979.615412781] [camera_to_base_transformer]: box from /box_position: camera=(-0.021, 0.079, 0.242) base=(0.390, 0.030, 0.461)
+[INFO] [1778527980.122334541] [camera_to_base_transformer]: box from /box_position: camera=(-0.018, 0.071, 0.242) base=(0.394, 0.027, 0.468)
+[INFO] [1778527980.669532499] [camera_to_base_transformer]: box from /box_position: camera=(-0.011, 0.060, 0.242) base=(0.398, 0.019, 0.478)
+[INFO] [1778527981.199171271] [camera_to_base_transformer]: box from /box_position: camera=(0.001, 0.053, 0.241) base=(0.400, 0.008, 0.485)
+[INFO] [1778527981.726431630] [camera_to_base_transformer]: box from /box_position: camera=(0.008, 0.050, 0.240) base=(0.400, 0.000, 0.487)
+[INFO] [1778527982.232657891] [camera_to_base_transformer]: box from /box_position: camera=(0.010, 0.051, 0.240) base=(0.400, -0.002, 0.487)
+[INFO] [1778527982.784288468] [camera_to_base_transformer]: box from /box_position: camera=(0.011, 0.051, 0.240) base=(0.384, 0.037, 0.454)
+[INFO] [1778527983.305605459] [camera_to_base_transformer]: box from /box_position: camera=(0.011, 0.051, 0.240) base=(0.384, 0.038, 0.454)
+[INFO] [1778527983.854458540] [camera_to_base_transformer]: box from /box_position: camera=(0.011, 0.052, 0.240) base=(0.384, 0.037, 0.454)
+[INFO] [1778527984.369389039] [camera_to_base_transformer]: box from /box_position: camera=(0.012, 0.058, 0.239) base=(0.424, 0.072, 0.436)
+[WARN] [1778527986.458585707] [camera_to_base_transformer]: No new detector input for 2.00s.
+[WARN] [1778527986.463492492] [camera_to_base_transformer]: No new visual target for 2.00s.
+[WARN] [1778527988.460743362] [camera_to_base_transformer]: No new detector input for 4.00s.
+[WARN] [1778527988.464612232] [camera_to_base_transformer]: No new visual target for 4.00s.
+[WARN] [1778527991.457416477] [camera_to_base_transformer]: No new detector input for 7.00s.
+[WARN] [1778527991.464544801] [camera_to_base_transformer]: No new visual target for 7.00s.
+[WARN] [1778527993.460994712] [camera_to_base_transformer]: No new detector input for 9.00s.
+[WARN] [1778527993.471013407] [camera_to_base_transformer]: No new visual target for 9.00s.
+[WARN] [1778527996.459405740] [camera_to_base_transformer]: No new detector input for 12.00s.
+[WARN] [1778527996.466054398] [camera_to_base_transformer]: No new visual target for 12.00s.
+[INFO] [1778527998.416064618] [camera_to_base_transformer]: box from /box_position: camera=(-0.024, 0.081, 0.240) base=(0.559, 0.060, 0.364)
+[INFO] [1778527998.966056154] [camera_to_base_transformer]: box from /box_position: camera=(-0.020, 0.079, 0.251) base=(0.571, 0.062, 0.363)
+[INFO] [1778527999.481090319] [camera_to_base_transformer]: box from /box_position: camera=(-0.020, 0.080, 0.251) base=(0.398, 0.029, 0.456)
+[INFO] [1778527999.988319244] [camera_to_base_transformer]: box from /box_position: camera=(-0.020, 0.080, 0.252) base=(0.399, 0.029, 0.456)
+[INFO] [1778528000.494196380] [camera_to_base_transformer]: box from /box_position: camera=(-0.020, 0.080, 0.252) base=(0.399, 0.029, 0.456)
+[INFO] [1778528001.032535223] [camera_to_base_transformer]: box from /box_position: camera=(-0.021, 0.080, 0.252) base=(0.399, 0.030, 0.456)
+[INFO] [1778528001.580742428] [camera_to_base_transformer]: box from /box_position: camera=(-0.020, 0.080, 0.251) base=(0.398, 0.030, 0.456)
+[INFO] [1778528002.137468247] [camera_to_base_transformer]: box from /box_position: camera=(-0.020, 0.080, 0.251) base=(0.398, 0.029, 0.456)
+[INFO] [1778528002.677030713] [camera_to_base_transformer]: box from /box_position: camera=(-0.020, 0.080, 0.251) base=(0.398, 0.029, 0.456)
+[INFO] [1778528003.231654618] [camera_to_base_transformer]: box from /box_position: camera=(-0.020, 0.078, 0.251) base=(0.399, 0.029, 0.458)
+[INFO] [1778528003.737783586] [camera_to_base_transformer]: box from /box_position: camera=(-0.018, 0.071, 0.251) base=(0.402, 0.026, 0.465)
+[INFO] [1778528004.249949630] [camera_to_base_transformer]: box from /box_position: camera=(-0.010, 0.060, 0.250) base=(0.406, 0.019, 0.475)
+[INFO] [1778528004.788618805] [camera_to_base_transformer]: box from /box_position: camera=(0.002, 0.053, 0.250) base=(0.408, 0.007, 0.481)
+[INFO] [1778528005.286101326] [camera_to_base_transformer]: box from /box_position: camera=(0.010, 0.052, 0.249) base=(0.408, -0.002, 0.482)
+[INFO] [1778528005.838146901] [camera_to_base_transformer]: box from /box_position: camera=(0.014, 0.051, 0.247) base=(0.406, -0.005, 0.483)
+[INFO] [1778528006.385814148] [camera_to_base_transformer]: box from /box_position: camera=(0.014, 0.052, 0.248) base=(0.393, 0.037, 0.454)
+[INFO] [1778528006.918141624] [camera_to_base_transformer]: box from /box_position: camera=(0.014, 0.052, 0.248) base=(0.393, 0.037, 0.454)
+[INFO] [1778528007.425749548] [camera_to_base_transformer]: box from /box_position: camera=(0.014, 0.052, 0.248) base=(0.393, 0.037, 0.454)
+[INFO] [1778528007.933615097] [camera_to_base_transformer]: box from /box_position: camera=(0.014, 0.051, 0.247) base=(0.392, 0.037, 0.454)
+[INFO] [1778528008.436156902] [camera_to_base_transformer]: box from /box_position: camera=(0.017, 0.069, 0.235) base=(0.433, 0.058, 0.444)
+[WARN] [1778528010.460640315] [camera_to_base_transformer]: No new detector input for 1.97s.
+[WARN] [1778528010.473279548] [camera_to_base_transformer]: No new visual target for 1.96s.
+[WARN] [1778528012.458978469] [camera_to_base_transformer]: No new detector input for 3.97s.
+[WARN] [1778528013.460409709] [camera_to_base_transformer]: No new visual target for 4.96s.
+[WARN] [1778528015.458843487] [camera_to_base_transformer]: No new detector input for 6.97s.
+[WARN] [1778528015.464167189] [camera_to_base_transformer]: No new visual target for 6.96s.
+[WARN] [1778528018.459706045] [camera_to_base_transformer]: No new detector input for 9.97s.
+[WARN] [1778528018.465755579] [camera_to_base_transformer]: No new visual target for 9.96s.
+[WARN] [1778528020.458556738] [camera_to_base_transformer]: No new detector input for 11.97s.
+[WARN] [1778528021.457631939] [camera_to_base_transformer]: No new visual target for 12.96s.
+[WARN] [1778528022.463188423] [camera_to_base_transformer]: No new detector input for 13.97s.
+[INFO] [1778528023.004945927] [camera_to_base_transformer]: box from /box_position: camera=(-0.009, 0.082, 0.243) base=(0.390, 0.018, 0.458)
+[INFO] [1778528023.577737932] [camera_to_base_transformer]: box from /box_position: camera=(-0.014, 0.078, 0.252) base=(0.400, 0.023, 0.457)
+[INFO] [1778528024.122121265] [camera_to_base_transformer]: box from /box_position: camera=(-0.013, 0.078, 0.252) base=(0.400, 0.022, 0.457)
+[INFO] [1778528024.657887319] [camera_to_base_transformer]: box from /box_position: camera=(-0.013, 0.078, 0.252) base=(0.400, 0.022, 0.457)
+[INFO] [1778528025.176235269] [camera_to_base_transformer]: box from /box_position: camera=(-0.013, 0.079, 0.252) base=(0.399, 0.022, 0.457)
+[INFO] [1778528025.682014820] [camera_to_base_transformer]: box from /box_position: camera=(-0.013, 0.079, 0.252) base=(0.399, 0.022, 0.457)
+[INFO] [1778528026.288638447] [camera_to_base_transformer]: box from /box_position: camera=(-0.013, 0.079, 0.252) base=(0.399, 0.022, 0.457)
+[INFO] [1778528026.837101775] [camera_to_base_transformer]: box from /box_position: camera=(-0.013, 0.079, 0.252) base=(0.399, 0.022, 0.457)
+[INFO] [1778528027.455575096] [camera_to_base_transformer]: box from /box_position: camera=(-0.013, 0.078, 0.252) base=(0.400, 0.022, 0.457)
+[INFO] [1778528027.980460329] [camera_to_base_transformer]: box from /box_position: camera=(-0.012, 0.076, 0.252) base=(0.401, 0.021, 0.460)
+[INFO] [1778528028.534461484] [camera_to_base_transformer]: box from /box_position: camera=(-0.008, 0.070, 0.252) base=(0.403, 0.017, 0.465)
+[INFO] [1778528029.036490539] [camera_to_base_transformer]: box from /box_position: camera=(-0.002, 0.061, 0.251) base=(0.406, 0.010, 0.473)
+[INFO] [1778528029.599665181] [camera_to_base_transformer]: box from /box_position: camera=(0.008, 0.057, 0.250) base=(0.406, 0.001, 0.477)
+[INFO] [1778528030.111482348] [camera_to_base_transformer]: box from /box_position: camera=(0.014, 0.058, 0.251) base=(0.407, -0.005, 0.476)
+[INFO] [1778528030.618645896] [camera_to_base_transformer]: box from /box_position: camera=(0.015, 0.058, 0.250) base=(0.406, -0.007, 0.476)
+[INFO] [1778528031.124298488] [camera_to_base_transformer]: box from /box_position: camera=(0.016, 0.058, 0.251) base=(0.397, 0.031, 0.454)
+[INFO] [1778528031.650303887] [camera_to_base_transformer]: box from /box_position: camera=(0.016, 0.058, 0.252) base=(0.397, 0.030, 0.454)
+[INFO] [1778528032.179218740] [camera_to_base_transformer]: box from /box_position: camera=(0.016, 0.058, 0.251) base=(0.397, 0.031, 0.454)
+[WARN] [1778528034.457941065] [camera_to_base_transformer]: No new detector input for 1.87s.
+[WARN] [1778528034.472850671] [camera_to_base_transformer]: No new visual target for 1.87s.
+[WARN] [1778528037.457416618] [camera_to_base_transformer]: No new detector input for 4.87s.
+[WARN] [1778528037.461361613] [camera_to_base_transformer]: No new visual target for 4.87s.
+[WARN] [1778528039.457718096] [camera_to_base_transformer]: No new detector input for 6.87s.
+[WARN] [1778528039.465300628] [camera_to_base_transformer]: No new visual target for 6.87s.
+[WARN] [1778528042.459346227] [camera_to_base_transformer]: No new detector input for 9.87s.
+[WARN] [1778528042.471171629] [camera_to_base_transformer]: No new visual target for 9.87s.
+[WARN] [1778528045.468905889] [camera_to_base_transformer]: No new detector input for 12.88s.
+[WARN] [1778528045.472569801] [camera_to_base_transformer]: No new visual target for 12.87s.
+[INFO] [1778528045.977728768] [camera_to_base_transformer]: box from /box_position: camera=(-0.023, 0.081, 0.243) base=(0.569, 0.054, 0.368)
+[INFO] [1778528046.521553517] [camera_to_base_transformer]: box from /box_position: camera=(-0.006, 0.078, 0.253) base=(0.585, 0.057, 0.379)
+[WARN] [1778528048.457704493] [camera_to_base_transformer]: No new detector input for 1.79s.
+[WARN] [1778528048.469136770] [camera_to_base_transformer]: No new visual target for 1.79s.
+[INFO] [1778528048.518315539] [camera_to_base_transformer]: box from /box_position: camera=(0.066, 0.081, 0.236) base=(0.383, -0.057, 0.460)
+[INFO] [1778528049.016101724] [camera_to_base_transformer]: box from /box_position: camera=(0.063, 0.083, 0.243) base=(0.389, -0.054, 0.456)
+[INFO] [1778528049.557423560] [camera_to_base_transformer]: box from /box_position: camera=(0.064, 0.083, 0.243) base=(0.389, -0.055, 0.456)
+[INFO] [1778528050.070055891] [camera_to_base_transformer]: box from /box_position: camera=(0.064, 0.083, 0.243) base=(0.389, -0.055, 0.456)
+[INFO] [1778528050.590227338] [camera_to_base_transformer]: box from /box_position: camera=(0.063, 0.083, 0.243) base=(0.389, -0.054, 0.456)
+[WARN] [1778528052.459067484] [camera_to_base_transformer]: No new detector input for 1.63s.
+[WARN] [1778528052.464578602] [camera_to_base_transformer]: No new visual target for 1.63s.
+[WARN] [1778528054.459199376] [camera_to_base_transformer]: No new detector input for 3.63s.
+[WARN] [1778528055.460554736] [camera_to_base_transformer]: No new visual target for 4.63s.
+[WARN] [1778528057.457437214] [camera_to_base_transformer]: No new detector input for 6.63s.
+[WARN] [1778528057.461556042] [camera_to_base_transformer]: No new visual target for 6.63s.
+[WARN] [1778528059.457998854] [camera_to_base_transformer]: No new detector input for 8.63s.
+[WARN] [1778528059.463627096] [camera_to_base_transformer]: No new visual target for 8.63s.
+[WARN] [1778528062.457467731] [camera_to_base_transformer]: No new detector input for 11.63s.
+[WARN] [1778528062.462847057] [camera_to_base_transformer]: No new visual target for 11.63s.
+[WARN] [1778528064.457637536] [camera_to_base_transformer]: No new detector input for 13.63s.
+[WARN] [1778528064.461465073] [camera_to_base_transformer]: No new visual target for 13.63s.
+[WARN] [1778528067.458926451] [camera_to_base_transformer]: No new detector input for 16.63s.
+[WARN] [1778528067.462360446] [camera_to_base_transformer]: No new visual target for 16.63s.
+[WARN] [1778528070.458159075] [camera_to_base_transformer]: No new detector input for 19.63s.
+[WARN] [1778528070.465757898] [camera_to_base_transformer]: No new visual target for 19.63s.
+[WARN] [1778528073.462100442] [camera_to_base_transformer]: No new detector input for 22.63s.
+[WARN] [1778528073.468687142] [camera_to_base_transformer]: No new visual target for 22.63s.
+[WARN] [1778528076.456976445] [camera_to_base_transformer]: No new detector input for 25.63s.
+[WARN] [1778528076.460570315] [camera_to_base_transformer]: No new visual target for 25.63s.
+[WARN] [1778528078.457761788] [camera_to_base_transformer]: No new detector input for 27.63s.
+[WARN] [1778528078.465311569] [camera_to_base_transformer]: No new visual target for 27.63s.
+[WARN] [1778528080.459791712] [camera_to_base_transformer]: No new detector input for 29.63s.
+[WARN] [1778528081.456889950] [camera_to_base_transformer]: No new visual target for 30.63s.
+[WARN] [1778528083.456988709] [camera_to_base_transformer]: No new detector input for 32.63s.
+[WARN] [1778528083.461788161] [camera_to_base_transformer]: No new visual target for 32.63s.
+[WARN] [1778528085.459087507] [camera_to_base_transformer]: No new detector input for 34.63s.
+[WARN] [1778528085.462063503] [camera_to_base_transformer]: No new visual target for 34.63s.
+[WARN] [1778528088.457933417] [camera_to_base_transformer]: No new detector input for 37.63s.
+[WARN] [1778528088.461840370] [camera_to_base_transformer]: No new visual target for 37.63s.
+[WARN] [1778528090.458020633] [camera_to_base_transformer]: No new detector input for 39.63s.
+[WARN] [1778528090.463497001] [camera_to_base_transformer]: No new visual target for 39.63s.
+[INFO] [1778528090.954339317] [camera_to_base_transformer]: box from /box_position: camera=(0.010, 0.044, 0.147) base=(0.423, -0.012, 0.455)
+[INFO] [1778528091.520945450] [camera_to_base_transformer]: box from /box_position: camera=(0.009, 0.015, 0.143) base=(0.419, 0.017, 0.456)
+[INFO] [1778528092.054251002] [camera_to_base_transformer]: box from /box_position: camera=(0.009, 0.016, 0.143) base=(0.419, 0.016, 0.456)
+[INFO] [1778528092.623749549] [camera_to_base_transformer]: box from /box_position: camera=(0.009, 0.016, 0.143) base=(0.419, 0.016, 0.456)
+[INFO] [1778528093.154941145] [camera_to_base_transformer]: box from /box_position: camera=(0.009, 0.016, 0.143) base=(0.419, 0.016, 0.456)
+[INFO] [1778528093.715679036] [camera_to_base_transformer]: box from /box_position: camera=(0.009, 0.016, 0.143) base=(0.419, 0.016, 0.456)
+[INFO] [1778528094.218777877] [camera_to_base_transformer]: box from /box_position: camera=(0.009, 0.016, 0.143) base=(0.419, 0.016, 0.456)
+[INFO] [1778528094.753906218] [camera_to_base_transformer]: box from /box_position: camera=(0.009, 0.016, 0.143) base=(0.419, 0.016, 0.456)
+[INFO] [1778528095.275580035] [camera_to_base_transformer]: box from /box_position: camera=(0.006, 0.016, 0.143) base=(0.418, 0.016, 0.454)
+[INFO] [1778528095.809267045] [camera_to_base_transformer]: box from /box_position: camera=(-0.007, 0.018, 0.142) base=(0.412, 0.015, 0.443)
+[INFO] [1778528096.423954823] [camera_to_base_transformer]: box from /box_position: camera=(-0.008, 0.019, 0.142) base=(0.419, 0.016, 0.459)
+[INFO] [1778528096.927630456] [camera_to_base_transformer]: box from /box_position: camera=(-0.008, 0.019, 0.141) base=(0.384, 0.079, 0.479)
+[WARN] [1778528099.457168018] [camera_to_base_transformer]: No new detector input for 2.40s.
+[WARN] [1778528099.461825095] [camera_to_base_transformer]: No new visual target for 2.39s.
+[WARN] [1778528102.456943297] [camera_to_base_transformer]: No new detector input for 5.40s.
+[WARN] [1778528102.462267165] [camera_to_base_transformer]: No new visual target for 5.39s.
+[WARN] [1778528104.459698547] [camera_to_base_transformer]: No new detector input for 7.40s.
+[WARN] [1778528104.467471912] [camera_to_base_transformer]: No new visual target for 7.39s.
+[WARN] [1778528106.458537886] [camera_to_base_transformer]: No new detector input for 9.40s.
+[WARN] [1778528107.458053201] [camera_to_base_transformer]: No new visual target for 10.39s.
+[WARN] [1778528109.459016287] [camera_to_base_transformer]: No new detector input for 12.40s.
+[WARN] [1778528109.462290574] [camera_to_base_transformer]: No new visual target for 12.39s.
+[WARN] [1778528111.462466160] [camera_to_base_transformer]: No new detector input for 14.40s.
+[WARN] [1778528111.471231690] [camera_to_base_transformer]: No new visual target for 14.40s.
+[WARN] [1778528114.458091107] [camera_to_base_transformer]: No new detector input for 17.40s.
+[WARN] [1778528114.462883309] [camera_to_base_transformer]: No new visual target for 17.39s.
+[WARN] [1778528117.457343297] [camera_to_base_transformer]: No new detector input for 20.40s.
+[WARN] [1778528117.460995709] [camera_to_base_transformer]: No new visual target for 20.39s.
+[WARN] [1778528120.457043320] [camera_to_base_transformer]: No new detector input for 23.40s.
+[WARN] [1778528120.459788441] [camera_to_base_transformer]: No new visual target for 23.39s.
+[WARN] [1778528123.457976006] [camera_to_base_transformer]: No new detector input for 26.40s.
+[WARN] [1778528123.462183459] [camera_to_base_transformer]: No new visual target for 26.39s.
+[WARN] [1778528126.457956443] [camera_to_base_transformer]: No new detector input for 29.40s.
+[WARN] [1778528126.461400397] [camera_to_base_transformer]: No new visual target for 29.39s.
+[WARN] [1778528129.457456046] [camera_to_base_transformer]: No new detector input for 32.40s.
+[WARN] [1778528129.461282499] [camera_to_base_transformer]: No new visual target for 32.39s.
+[WARN] [1778528132.457712355] [camera_to_base_transformer]: No new detector input for 35.40s.
+[WARN] [1778528132.460898684] [camera_to_base_transformer]: No new visual target for 35.39s.
+[WARN] [1778528135.456973540] [camera_to_base_transformer]: No new detector input for 38.40s.
+[WARN] [1778528135.460798076] [camera_to_base_transformer]: No new visual target for 38.39s.
+[WARN] [1778528137.459379367] [camera_to_base_transformer]: No new detector input for 40.40s.
+[WARN] [1778528137.463168778] [camera_to_base_transformer]: No new visual target for 40.39s.
+[WARN] [1778528140.458120592] [camera_to_base_transformer]: No new detector input for 43.40s.
+[WARN] [1778528140.464637041] [camera_to_base_transformer]: No new visual target for 43.39s.
+[WARN] [1778528143.457541481] [camera_to_base_transformer]: No new detector input for 46.40s.
+[WARN] [1778528143.460638102] [camera_to_base_transformer]: No new visual target for 46.39s.
+[WARN] [1778528146.457178495] [camera_to_base_transformer]: No new detector input for 49.40s.
+[WARN] [1778528146.460375782] [camera_to_base_transformer]: No new visual target for 49.39s.
+[WARN] [1778528149.457874423] [camera_to_base_transformer]: No new detector input for 52.40s.
+[WARN] [1778528149.463585082] [camera_to_base_transformer]: No new visual target for 52.39s.
+[WARN] [1778528152.457020810] [camera_to_base_transformer]: No new detector input for 55.40s.
+[WARN] [1778528152.459930181] [camera_to_base_transformer]: No new visual target for 55.39s.
+[WARN] [1778528154.457540177] [camera_to_base_transformer]: No new detector input for 57.40s.
+[WARN] [1778528154.460504381] [camera_to_base_transformer]: No new visual target for 57.39s.
+[WARN] [1778528157.456985395] [camera_to_base_transformer]: No new detector input for 60.40s.
+[WARN] [1778528157.460289682] [camera_to_base_transformer]: No new visual target for 60.39s.
+[WARN] [1778528160.457039861] [camera_to_base_transformer]: No new detector input for 63.40s.
+[WARN] [1778528160.460471857] [camera_to_base_transformer]: No new visual target for 63.39s.
+[WARN] [1778528162.456976686] [camera_to_base_transformer]: No new detector input for 65.40s.
+[WARN] [1778528163.456925577] [camera_to_base_transformer]: No new visual target for 66.39s.
+[WARN] [1778528164.458011841] [camera_to_base_transformer]: No new detector input for 67.40s.
+[WARN] [1778528165.457038942] [camera_to_base_transformer]: No new visual target for 68.39s.
+[WARN] [1778528167.456864557] [camera_to_base_transformer]: No new detector input for 70.40s.
+[WARN] [1778528167.460127136] [camera_to_base_transformer]: No new visual target for 70.39s.
+[WARN] [1778528169.457029255] [camera_to_base_transformer]: No new detector input for 72.40s.
+[WARN] [1778528170.457293644] [camera_to_base_transformer]: No new visual target for 73.39s.
+[WARN] [1778528172.457930841] [camera_to_base_transformer]: No new detector input for 75.40s.
+[WARN] [1778528172.461721169] [camera_to_base_transformer]: No new visual target for 75.39s.
+[WARN] [1778528175.457047053] [camera_to_base_transformer]: No new detector input for 78.40s.
+[WARN] [1778528175.460085174] [camera_to_base_transformer]: No new visual target for 78.39s.
+[WARN] [1778528177.457982623] [camera_to_base_transformer]: No new detector input for 80.40s.
+[WARN] [1778528177.460780869] [camera_to_base_transformer]: No new visual target for 80.39s.
+[WARN] [1778528180.457666791] [camera_to_base_transformer]: No new detector input for 83.40s.
+[WARN] [1778528180.461004162] [camera_to_base_transformer]: No new visual target for 83.39s.
+[WARN] [1778528183.457413375] [camera_to_base_transformer]: No new detector input for 86.40s.
+[WARN] [1778528183.460501954] [camera_to_base_transformer]: No new visual target for 86.39s.
+[WARN] [1778528185.457140486] [camera_to_base_transformer]: No new detector input for 88.40s.
+[WARN] [1778528186.458074873] [camera_to_base_transformer]: No new visual target for 89.39s.
+[WARN] [1778528187.457174721] [camera_to_base_transformer]: No new detector input for 90.40s.
+[WARN] [1778528189.459691328] [camera_to_base_transformer]: No new detector input for 92.40s.
+[WARN] [1778528189.465172029] [camera_to_base_transformer]: No new visual target for 92.39s.
+[INFO] [1778528189.509395387] [camera_to_base_transformer]: apple from /apple_position: camera=(-0.030, 0.076, 0.224) base=(0.375, 0.039, 0.472)
+[INFO] [1778528190.097963568] [camera_to_base_transformer]: apple from /apple_position: camera=(-0.030, 0.076, 0.224) base=(0.375, 0.039, 0.472)
+[INFO] [1778528190.666750442] [camera_to_base_transformer]: apple from /apple_position: camera=(-0.030, 0.076, 0.224) base=(0.375, 0.039, 0.472)
+[INFO] [1778528191.213247512] [camera_to_base_transformer]: apple from /apple_position: camera=(-0.030, 0.076, 0.224) base=(0.375, 0.039, 0.472)
+[INFO] [1778528191.773166398] [camera_to_base_transformer]: apple from /apple_position: camera=(-0.030, 0.076, 0.224) base=(0.375, 0.039, 0.472)
+[INFO] [1778528192.347020099] [camera_to_base_transformer]: apple from /apple_position: camera=(-0.030, 0.076, 0.224) base=(0.375, 0.039, 0.472)
+[INFO] [1778528192.963261535] [camera_to_base_transformer]: apple from /apple_position: camera=(-0.030, 0.076, 0.224) base=(0.375, 0.039, 0.472)
+[INFO] [1778528193.534546280] [camera_to_base_transformer]: apple from /apple_position: camera=(-0.030, 0.076, 0.224) base=(0.375, 0.039, 0.472)
+[INFO] [1778528194.061983542] [camera_to_base_transformer]: apple from /apple_position: camera=(-0.027, 0.058, 0.229) base=(0.387, 0.035, 0.486)
+[INFO] [1778528194.636811949] [camera_to_base_transformer]: apple from /apple_position: camera=(0.012, 0.038, 0.223) base=(0.389, -0.004, 0.506)
+[INFO] [1778528195.365397362] [camera_to_base_transformer]: apple from /apple_position: camera=(0.015, 0.038, 0.222) base=(0.370, 0.050, 0.467)
+[INFO] [1778528195.937089649] [camera_to_base_transformer]: apple from /apple_position: camera=(0.019, 0.055, 0.220) base=(0.397, 0.089, 0.463)
+[WARN] [1778528198.457545485] [camera_to_base_transformer]: No new detector input for 2.47s.
+[WARN] [1778528198.463790352] [camera_to_base_transformer]: No new visual target for 2.47s.
+[WARN] [1778528201.457883354] [camera_to_base_transformer]: No new detector input for 5.47s.
+[WARN] [1778528201.460832059] [camera_to_base_transformer]: No new visual target for 5.47s.
+[WARN] [1778528203.458158752] [camera_to_base_transformer]: No new detector input for 7.47s.
+[WARN] [1778528203.462489455] [camera_to_base_transformer]: No new visual target for 7.47s.
+[WARN] [1778528206.457916036] [camera_to_base_transformer]: No new detector input for 10.47s.
+[WARN] [1778528206.467131191] [camera_to_base_transformer]: No new visual target for 10.47s.
+[WARN] [1778528208.459703931] [camera_to_base_transformer]: No new detector input for 12.47s.
+[WARN] [1778528208.465662965] [camera_to_base_transformer]: No new visual target for 12.47s.
+[INFO] [1778528209.872931104] [camera_to_base_transformer]: apple from /apple_position: camera=(-0.031, 0.074, 0.218) base=(0.506, 0.093, 0.393)
+[INFO] [1778528210.493672200] [camera_to_base_transformer]: apple from /apple_position: camera=(-0.030, 0.076, 0.224) base=(0.512, 0.092, 0.392)
+[INFO] [1778528210.998973740] [camera_to_base_transformer]: apple from /apple_position: camera=(-0.030, 0.076, 0.224) base=(0.375, 0.039, 0.472)
+[INFO] [1778528211.566506572] [camera_to_base_transformer]: apple from /apple_position: camera=(-0.030, 0.076, 0.224) base=(0.375, 0.039, 0.472)
+[INFO] [1778528212.133061406] [camera_to_base_transformer]: apple from /apple_position: camera=(-0.030, 0.076, 0.224) base=(0.375, 0.039, 0.472)
+[INFO] [1778528212.683179303] [camera_to_base_transformer]: apple from /apple_position: camera=(-0.030, 0.076, 0.224) base=(0.375, 0.039, 0.472)
+[INFO] [1778528213.295663243] [camera_to_base_transformer]: apple from /apple_position: camera=(-0.030, 0.076, 0.224) base=(0.375, 0.039, 0.472)
+[INFO] [1778528213.943483345] [camera_to_base_transformer]: apple from /apple_position: camera=(-0.030, 0.076, 0.224) base=(0.375, 0.039, 0.472)
+[INFO] [1778528214.563750816] [camera_to_base_transformer]: apple from /apple_position: camera=(-0.030, 0.076, 0.224) base=(0.375, 0.039, 0.472)
+[INFO] [1778528215.086573915] [camera_to_base_transformer]: apple from /apple_position: camera=(-0.030, 0.076, 0.224) base=(0.375, 0.039, 0.472)
+[WARN] [1778528217.457620861] [camera_to_base_transformer]: No new detector input for 2.30s.
+[WARN] [1778528217.460820607] [camera_to_base_transformer]: No new visual target for 2.30s.
+[WARN] [1778528220.457157683] [camera_to_base_transformer]: No new detector input for 5.30s.
+[WARN] [1778528220.460104429] [camera_to_base_transformer]: No new visual target for 5.30s.
+[WARN] [1778528223.457666794] [camera_to_base_transformer]: No new detector input for 8.30s.
+[WARN] [1778528223.461278039] [camera_to_base_transformer]: No new visual target for 8.30s.
+[WARN] [1778528226.457174489] [camera_to_base_transformer]: No new detector input for 11.30s.
+[WARN] [1778528226.460330693] [camera_to_base_transformer]: No new visual target for 11.30s.
+[WARN] [1778528228.457638631] [camera_to_base_transformer]: No new detector input for 13.30s.
+[WARN] [1778528228.460974460] [camera_to_base_transformer]: No new visual target for 13.30s.
+[WARN] [1778528231.456828449] [camera_to_base_transformer]: No new detector input for 16.30s.
+[WARN] [1778528231.459818570] [camera_to_base_transformer]: No new visual target for 16.30s.
+[WARN] [1778528234.457153432] [camera_to_base_transformer]: No new detector input for 19.30s.
+[WARN] [1778528234.461592009] [camera_to_base_transformer]: No new visual target for 19.30s.
+[WARN] [1778528237.457318372] [camera_to_base_transformer]: No new detector input for 22.30s.
+[WARN] [1778528237.460178410] [camera_to_base_transformer]: No new visual target for 22.30s.
+[WARN] [1778528239.457546220] [camera_to_base_transformer]: No new detector input for 24.30s.
+[WARN] [1778528239.461384673] [camera_to_base_transformer]: No new visual target for 24.30s.
+[WARN] [1778528242.456930909] [camera_to_base_transformer]: No new detector input for 27.30s.
+[WARN] [1778528242.459861489] [camera_to_base_transformer]: No new visual target for 27.30s.
+[WARN] [1778528244.457452548] [camera_to_base_transformer]: No new detector input for 29.30s.
+[WARN] [1778528244.460517627] [camera_to_base_transformer]: No new visual target for 29.30s.
+[WARN] [1778528246.457086729] [camera_to_base_transformer]: No new detector input for 31.30s.
+[WARN] [1778528246.461572181] [camera_to_base_transformer]: No new visual target for 31.30s.
+[WARN] [1778528249.457257706] [camera_to_base_transformer]: No new detector input for 34.30s.
+[WARN] [1778528249.460095578] [camera_to_base_transformer]: No new visual target for 34.30s.
+[WARN] [1778528251.458176426] [camera_to_base_transformer]: No new detector input for 36.30s.
+[WARN] [1778528251.461662380] [camera_to_base_transformer]: No new visual target for 36.30s.
+[WARN] [1778528254.456996279] [camera_to_base_transformer]: No new detector input for 39.30s.
+[WARN] [1778528254.460650607] [camera_to_base_transformer]: No new visual target for 39.30s.
+[WARN] [1778528256.457548540] [camera_to_base_transformer]: No new detector input for 41.30s.
+[WARN] [1778528256.460877994] [camera_to_base_transformer]: No new visual target for 41.30s.
+[WARN] [1778528259.457187182] [camera_to_base_transformer]: No new detector input for 44.30s.
+[WARN] [1778528259.464337589] [camera_to_base_transformer]: No new visual target for 44.30s.
+[WARN] [1778528262.457095655] [camera_to_base_transformer]: No new detector input for 47.30s.
+[WARN] [1778528262.462010941] [camera_to_base_transformer]: No new visual target for 47.30s.
+[WARN] [1778528264.457623706] [camera_to_base_transformer]: No new detector input for 49.30s.
+[WARN] [1778528264.461102326] [camera_to_base_transformer]: No new visual target for 49.30s.
+[WARN] [1778528266.457463007] [camera_to_base_transformer]: No new detector input for 51.30s.
+[WARN] [1778528267.456877887] [camera_to_base_transformer]: No new visual target for 52.30s.
+[WARN] [1778528269.457021854] [camera_to_base_transformer]: No new detector input for 54.30s.
+[WARN] [1778528269.460542350] [camera_to_base_transformer]: No new visual target for 54.30s.
+[WARN] [1778528271.457541195] [camera_to_base_transformer]: No new detector input for 56.30s.
+[WARN] [1778528271.460541274] [camera_to_base_transformer]: No new visual target for 56.30s.
+[WARN] [1778528274.457770581] [camera_to_base_transformer]: No new detector input for 59.30s.
+[WARN] [1778528274.460892577] [camera_to_base_transformer]: No new visual target for 59.30s.
+[WARN] [1778528277.456897884] [camera_to_base_transformer]: No new detector input for 62.30s.
+[WARN] [1778528277.459759256] [camera_to_base_transformer]: No new visual target for 62.30s.
+[WARN] [1778528279.456991307] [camera_to_base_transformer]: No new detector input for 64.30s.
+[WARN] [1778528279.460207220] [camera_to_base_transformer]: No new visual target for 64.30s.
+[WARN] [1778528281.456915605] [camera_to_base_transformer]: No new detector input for 66.30s.
+[WARN] [1778528282.457206149] [camera_to_base_transformer]: No new visual target for 67.30s.
+[WARN] [1778528284.457329071] [camera_to_base_transformer]: No new detector input for 69.30s.
+[WARN] [1778528284.460730400] [camera_to_base_transformer]: No new visual target for 69.30s.
+[WARN] [1778528287.457019579] [camera_to_base_transformer]: No new detector input for 72.30s.
+[WARN] [1778528287.461796364] [camera_to_base_transformer]: No new visual target for 72.30s.
+[INFO] [1778528288.165559386] [camera_to_base_transformer]: duck from /duck_position: camera=(0.106, 0.072, 0.254) base=(0.403, -0.098, 0.461)
+[INFO] [1778528288.700565882] [camera_to_base_transformer]: duck from /duck_position: camera=(0.107, 0.072, 0.254) base=(0.403, -0.098, 0.461)
+[INFO] [1778528289.217081486] [camera_to_base_transformer]: duck from /duck_position: camera=(0.107, 0.072, 0.254) base=(0.403, -0.098, 0.461)
+[INFO] [1778528289.726490433] [camera_to_base_transformer]: duck from /duck_position: camera=(0.106, 0.072, 0.254) base=(0.403, -0.098, 0.461)
+[INFO] [1778528290.270407417] [camera_to_base_transformer]: duck from /duck_position: camera=(0.106, 0.073, 0.254) base=(0.403, -0.098, 0.461)
+[INFO] [1778528290.817381063] [camera_to_base_transformer]: duck from /duck_position: camera=(0.106, 0.073, 0.254) base=(0.403, -0.098, 0.461)
+[INFO] [1778528291.340692158] [camera_to_base_transformer]: duck from /duck_position: camera=(0.107, 0.072, 0.254) base=(0.403, -0.098, 0.461)
+[INFO] [1778528292.129531525] [camera_to_base_transformer]: duck from /duck_position: camera=(0.107, 0.072, 0.254) base=(0.403, -0.098, 0.462)
+[INFO] [1778528292.687601365] [camera_to_base_transformer]: duck from /duck_position: camera=(0.116, 0.078, 0.242) base=(0.390, -0.108, 0.461)
+[WARN] [1778528294.456808967] [camera_to_base_transformer]: No new detector input for 1.73s.
+[WARN] [1778528294.461504961] [camera_to_base_transformer]: No new visual target for 1.72s.
+[WARN] [1778528296.457339261] [camera_to_base_transformer]: No new detector input for 3.73s.
+[WARN] [1778528296.463198336] [camera_to_base_transformer]: No new visual target for 3.72s.
+[WARN] [1778528298.458996636] [camera_to_base_transformer]: No new detector input for 5.73s.
+[WARN] [1778528298.464678670] [camera_to_base_transformer]: No new visual target for 5.72s.
+[WARN] [1778528300.461346010] [camera_to_base_transformer]: No new detector input for 7.73s.
+[WARN] [1778528300.467933709] [camera_to_base_transformer]: No new visual target for 7.72s.
+[WARN] [1778528302.459233847] [camera_to_base_transformer]: No new detector input for 9.73s.
+[WARN] [1778528303.458509765] [camera_to_base_transformer]: No new visual target for 10.72s.
+[WARN] [1778528305.457373101] [camera_to_base_transformer]: No new detector input for 12.73s.
+[WARN] [1778528305.464407550] [camera_to_base_transformer]: No new visual target for 12.72s.
+[WARN] [1778528307.457647351] [camera_to_base_transformer]: No new detector input for 14.73s.
+[WARN] [1778528307.461169721] [camera_to_base_transformer]: No new visual target for 14.72s.
+[WARN] [1778528310.459577890] [camera_to_base_transformer]: No new detector input for 17.73s.
+[WARN] [1778528310.463784509] [camera_to_base_transformer]: No new visual target for 17.72s.
+[WARN] [1778528312.458397141] [camera_to_base_transformer]: No new detector input for 19.73s.
+[WARN] [1778528313.457565141] [camera_to_base_transformer]: No new visual target for 20.72s.
+[WARN] [1778528314.457503558] [camera_to_base_transformer]: No new detector input for 21.73s.
+[WARN] [1778528316.466100253] [camera_to_base_transformer]: No new detector input for 23.73s.
+[WARN] [1778528316.472471953] [camera_to_base_transformer]: No new visual target for 23.72s.
+[WARN] [1778528319.456946304] [camera_to_base_transformer]: No new detector input for 26.73s.
+[WARN] [1778528319.460037424] [camera_to_base_transformer]: No new visual target for 26.72s.
+[WARN] [1778528322.457695298] [camera_to_base_transformer]: No new detector input for 29.73s.
+[WARN] [1778528322.463231916] [camera_to_base_transformer]: No new visual target for 29.72s.
+[WARN] [1778528324.457811753] [camera_to_base_transformer]: No new detector input for 31.73s.
+[WARN] [1778528325.458641126] [camera_to_base_transformer]: No new visual target for 32.72s.
+[WARN] [1778528327.456911749] [camera_to_base_transformer]: No new detector input for 34.73s.
+[WARN] [1778528327.460310453] [camera_to_base_transformer]: No new visual target for 34.72s.
+[WARN] [1778528330.457000742] [camera_to_base_transformer]: No new detector input for 37.73s.
+[WARN] [1778528330.460139405] [camera_to_base_transformer]: No new visual target for 37.72s.
+[WARN] [1778528333.457213901] [camera_to_base_transformer]: No new detector input for 40.73s.
+[WARN] [1778528333.460775063] [camera_to_base_transformer]: No new visual target for 40.72s.
+[WARN] [1778528335.456718354] [camera_to_base_transformer]: No new detector input for 42.73s.
+[WARN] [1778528336.457159101] [camera_to_base_transformer]: No new visual target for 43.72s.
+[WARN] [1778528337.457620389] [camera_to_base_transformer]: No new detector input for 44.73s.
+[WARN] [1778528339.457082633] [camera_to_base_transformer]: No new detector input for 46.73s.
+[WARN] [1778528339.460481629] [camera_to_base_transformer]: No new visual target for 46.72s.
+[WARN] [1778528341.457050751] [camera_to_base_transformer]: No new detector input for 48.73s.
+[WARN] [1778528342.457097748] [camera_to_base_transformer]: No new visual target for 49.72s.
+[WARN] [1778528344.456966490] [camera_to_base_transformer]: No new detector input for 51.73s.
+[WARN] [1778528344.460091778] [camera_to_base_transformer]: No new visual target for 51.72s.
+[WARN] [1778528346.456947399] [camera_to_base_transformer]: No new detector input for 53.73s.
+[WARN] [1778528347.457036478] [camera_to_base_transformer]: No new visual target for 54.72s.
+[WARN] [1778528348.457106974] [camera_to_base_transformer]: No new detector input for 55.73s.
+[WARN] [1778528349.457562927] [camera_to_base_transformer]: No new visual target for 56.72s.
+[WARN] [1778528350.458383255] [camera_to_base_transformer]: No new detector input for 57.73s.
+[INFO] [1778528351.499208613] [camera_to_base_transformer]: duck from /duck_position: camera=(0.061, 0.076, 0.244) base=(0.393, -0.053, 0.462)
+[INFO] [1778528352.026884198] [camera_to_base_transformer]: duck from /duck_position: camera=(0.061, 0.076, 0.244) base=(0.393, -0.053, 0.462)
+[INFO] [1778528352.541493260] [camera_to_base_transformer]: duck from /duck_position: camera=(0.061, 0.076, 0.244) base=(0.393, -0.053, 0.462)
+[INFO] [1778528353.095414394] [camera_to_base_transformer]: duck from /duck_position: camera=(0.061, 0.076, 0.244) base=(0.393, -0.053, 0.462)
+[INFO] [1778528353.635820545] [camera_to_base_transformer]: duck from /duck_position: camera=(0.062, 0.076, 0.244) base=(0.393, -0.053, 0.462)
+[INFO] [1778528354.168960290] [camera_to_base_transformer]: duck from /duck_position: camera=(0.061, 0.076, 0.244) base=(0.393, -0.053, 0.462)
+[INFO] [1778528354.709271317] [camera_to_base_transformer]: duck from /duck_position: camera=(0.061, 0.076, 0.244) base=(0.393, -0.053, 0.462)
+[INFO] [1778528355.265752906] [camera_to_base_transformer]: duck from /duck_position: camera=(0.061, 0.076, 0.244) base=(0.393, -0.053, 0.462)
+[INFO] [1778528355.766863902] [camera_to_base_transformer]: duck from /duck_position: camera=(0.061, 0.076, 0.244) base=(0.393, -0.053, 0.462)
+[WARN] [1778528358.458007675] [camera_to_base_transformer]: No new detector input for 2.47s.
+[WARN] [1778528358.462739752] [camera_to_base_transformer]: No new visual target for 2.47s.
+[WARN] [1778528360.458372455] [camera_to_base_transformer]: No new detector input for 4.47s.
+[WARN] [1778528361.458801032] [camera_to_base_transformer]: No new visual target for 5.47s.
+[WARN] [1778528362.458348527] [camera_to_base_transformer]: No new detector input for 6.47s.
+[WARN] [1778528363.458477230] [camera_to_base_transformer]: No new visual target for 7.47s.
+[WARN] [1778528365.457728302] [camera_to_base_transformer]: No new detector input for 9.47s.
+[WARN] [1778528365.461317756] [camera_to_base_transformer]: No new visual target for 9.47s.
+[WARN] [1778528367.457746706] [camera_to_base_transformer]: No new detector input for 11.47s.
+[WARN] [1778528367.464302989] [camera_to_base_transformer]: No new visual target for 11.47s.
+[WARN] [1778528369.458900067] [camera_to_base_transformer]: No new detector input for 13.47s.
+[WARN] [1778528369.465280184] [camera_to_base_transformer]: No new visual target for 13.47s.
+[INFO] [1778528370.361873941] [camera_to_base_transformer]: duck from /duck_position: camera=(0.056, 0.081, 0.240) base=(0.555, -0.047, 0.453)
+[INFO] [1778528370.979639029] [camera_to_base_transformer]: duck from /duck_position: camera=(0.056, 0.074, 0.252) base=(0.565, -0.040, 0.447)
+[INFO] [1778528371.535203993] [camera_to_base_transformer]: duck from /duck_position: camera=(0.055, 0.073, 0.252) base=(0.401, -0.047, 0.461)
+[INFO] [1778528372.090854415] [camera_to_base_transformer]: duck from /duck_position: camera=(0.055, 0.073, 0.252) base=(0.401, -0.047, 0.461)
+[INFO] [1778528372.626324031] [camera_to_base_transformer]: duck from /duck_position: camera=(0.055, 0.073, 0.252) base=(0.401, -0.047, 0.461)
+[INFO] [1778528373.230914638] [camera_to_base_transformer]: duck from /duck_position: camera=(0.056, 0.073, 0.252) base=(0.401, -0.047, 0.461)
+[INFO] [1778528373.789874347] [camera_to_base_transformer]: duck from /duck_position: camera=(0.055, 0.073, 0.252) base=(0.401, -0.047, 0.461)
+[INFO] [1778528374.312792271] [camera_to_base_transformer]: duck from /duck_position: camera=(0.055, 0.073, 0.252) base=(0.401, -0.047, 0.461)
+[INFO] [1778528374.820863923] [camera_to_base_transformer]: duck from /duck_position: camera=(0.055, 0.073, 0.252) base=(0.401, -0.047, 0.461)
+[INFO] [1778528375.491960274] [camera_to_base_transformer]: duck from /duck_position: camera=(0.056, 0.077, 0.252) base=(0.399, -0.047, 0.457)
+[WARN] [1778528377.458253096] [camera_to_base_transformer]: No new detector input for 1.62s.
+[WARN] [1778528377.469878039] [camera_to_base_transformer]: No new visual target for 1.62s.
+[WARN] [1778528379.463216283] [camera_to_base_transformer]: No new detector input for 3.62s.
+[WARN] [1778528379.472189646] [camera_to_base_transformer]: No new visual target for 3.62s.
+[WARN] [1778528381.460480522] [camera_to_base_transformer]: No new detector input for 5.62s.
+[WARN] [1778528382.457842601] [camera_to_base_transformer]: No new visual target for 6.62s.
+[WARN] [1778528384.459462333] [camera_to_base_transformer]: No new detector input for 8.62s.
+[WARN] [1778528384.468389446] [camera_to_base_transformer]: No new visual target for 8.62s.
+[WARN] [1778528387.457663352] [camera_to_base_transformer]: No new detector input for 11.62s.
+[WARN] [1778528387.467980172] [camera_to_base_transformer]: No new visual target for 11.62s.
+[WARN] [1778528389.457675252] [camera_to_base_transformer]: No new detector input for 13.62s.
+[WARN] [1778528389.464016868] [camera_to_base_transformer]: No new visual target for 13.62s.
+[WARN] [1778528391.461392515] [camera_to_base_transformer]: No new detector input for 15.62s.
+[WARN] [1778528391.472229614] [camera_to_base_transformer]: No new visual target for 15.62s.
+[WARN] [1778528394.458831456] [camera_to_base_transformer]: No new detector input for 18.62s.
+[WARN] [1778528394.467802809] [camera_to_base_transformer]: No new visual target for 18.62s.
+[WARN] [1778528397.457155520] [camera_to_base_transformer]: No new detector input for 21.62s.
+[WARN] [1778528397.462329258] [camera_to_base_transformer]: No new visual target for 21.62s.
+[WARN] [1778528400.456900374] [camera_to_base_transformer]: No new detector input for 24.62s.
+[WARN] [1778528400.460412282] [camera_to_base_transformer]: No new visual target for 24.62s.
+[WARN] [1778528402.457648387] [camera_to_base_transformer]: No new detector input for 26.62s.
+[WARN] [1778528402.460365588] [camera_to_base_transformer]: No new visual target for 26.62s.
+[WARN] [1778528405.457248660] [camera_to_base_transformer]: No new detector input for 29.62s.
+[WARN] [1778528405.461425566] [camera_to_base_transformer]: No new visual target for 29.62s.
+[WARN] [1778528407.457086676] [camera_to_base_transformer]: No new detector input for 31.62s.
+[WARN] [1778528408.457105267] [camera_to_base_transformer]: No new visual target for 32.62s.
+[WARN] [1778528410.457050825] [camera_to_base_transformer]: No new detector input for 34.62s.
+[WARN] [1778528410.460218776] [camera_to_base_transformer]: No new visual target for 34.62s.
+[WARN] [1778528412.456946301] [camera_to_base_transformer]: No new detector input for 36.62s.
+[WARN] [1778528412.460094793] [camera_to_base_transformer]: No new visual target for 36.62s.
+[WARN] [1778528414.457524776] [camera_to_base_transformer]: No new detector input for 38.62s.
+[WARN] [1778528414.464530759] [camera_to_base_transformer]: No new visual target for 38.62s.
+[WARN] [1778528417.458751675] [camera_to_base_transformer]: No new detector input for 41.62s.
+[WARN] [1778528417.463639372] [camera_to_base_transformer]: No new visual target for 41.62s.
+[WARN] [1778528420.457343749] [camera_to_base_transformer]: No new detector input for 44.62s.
+[WARN] [1778528420.460178367] [camera_to_base_transformer]: No new visual target for 44.62s.
+[WARN] [1778528423.457306696] [camera_to_base_transformer]: No new detector input for 47.62s.
+[WARN] [1778528423.462562767] [camera_to_base_transformer]: No new visual target for 47.62s.
+[WARN] [1778528426.456952603] [camera_to_base_transformer]: No new detector input for 50.62s.
+[WARN] [1778528426.460322345] [camera_to_base_transformer]: No new visual target for 50.62s.
+[INFO] [1778528426.488500111] [camera_to_base_transformer]: duck from /duck_position: camera=(0.076, 0.109, 0.331) base=(0.458, -0.067, 0.396)
+[INFO] [1778528427.094583111] [camera_to_base_transformer]: duck from /duck_position: camera=(0.076, 0.109, 0.331) base=(0.458, -0.067, 0.396)
+[INFO] [1778528427.640260048] [camera_to_base_transformer]: duck from /duck_position: camera=(0.076, 0.110, 0.331) base=(0.458, -0.067, 0.395)
+[INFO] [1778528428.178124337] [camera_to_base_transformer]: duck from /duck_position: camera=(0.076, 0.110, 0.331) base=(0.458, -0.067, 0.395)
+[INFO] [1778528428.738330823] [camera_to_base_transformer]: duck from /duck_position: camera=(0.076, 0.110, 0.331) base=(0.458, -0.067, 0.395)
+[INFO] [1778528429.269278254] [camera_to_base_transformer]: duck from /duck_position: camera=(0.076, 0.110, 0.331) base=(0.458, -0.067, 0.395)
+[INFO] [1778528429.825038876] [camera_to_base_transformer]: duck from /duck_position: camera=(0.076, 0.109, 0.331) base=(0.458, -0.067, 0.396)
+[INFO] [1778528430.367088072] [camera_to_base_transformer]: duck from /duck_position: camera=(0.076, 0.109, 0.331) base=(0.458, -0.067, 0.396)
+[INFO] [1778528430.882523540] [camera_to_base_transformer]: duck from /duck_position: camera=(0.074, 0.111, 0.331) base=(0.458, -0.066, 0.394)
+[WARN] [1778528433.457475056] [camera_to_base_transformer]: No new detector input for 2.46s.
+[WARN] [1778528433.461241713] [camera_to_base_transformer]: No new visual target for 2.46s.
+[WARN] [1778528435.459715782] [camera_to_base_transformer]: No new detector input for 4.46s.
+[WARN] [1778528435.467884554] [camera_to_base_transformer]: No new visual target for 4.46s.
+[WARN] [1778528438.458398072] [camera_to_base_transformer]: No new detector input for 7.46s.
+[WARN] [1778528438.466029887] [camera_to_base_transformer]: No new visual target for 7.46s.
+[WARN] [1778528441.457503071] [camera_to_base_transformer]: No new detector input for 10.46s.
+[WARN] [1778528441.460940146] [camera_to_base_transformer]: No new visual target for 10.46s.
+[WARN] [1778528444.458438566] [camera_to_base_transformer]: No new detector input for 13.46s.
+[WARN] [1778528444.464172094] [camera_to_base_transformer]: No new visual target for 13.46s.
+[WARN] [1778528447.458863272] [camera_to_base_transformer]: No new detector input for 16.46s.
+[WARN] [1778528447.470806868] [camera_to_base_transformer]: No new visual target for 16.46s.
+[WARN] [1778528449.458697467] [camera_to_base_transformer]: No new detector input for 18.46s.
+[WARN] [1778528450.457257235] [camera_to_base_transformer]: No new visual target for 19.46s.
+[WARN] [1778528452.461336837] [camera_to_base_transformer]: No new detector input for 21.46s.
+[WARN] [1778528452.467189281] [camera_to_base_transformer]: No new visual target for 21.46s.
+[WARN] [1778528454.458341623] [camera_to_base_transformer]: No new detector input for 23.46s.
+[WARN] [1778528455.457999847] [camera_to_base_transformer]: No new visual target for 24.46s.
+[WARN] [1778528457.457076796] [camera_to_base_transformer]: No new detector input for 26.46s.
+[WARN] [1778528457.460354080] [camera_to_base_transformer]: No new visual target for 26.46s.
+[WARN] [1778528460.458599714] [camera_to_base_transformer]: No new detector input for 29.46s.
+[WARN] [1778528460.462280955] [camera_to_base_transformer]: No new visual target for 29.46s.
+[WARN] [1778528463.456786807] [camera_to_base_transformer]: No new detector input for 32.46s.
+[WARN] [1778528463.460428590] [camera_to_base_transformer]: No new visual target for 32.46s.
+[WARN] [1778528465.457046256] [camera_to_base_transformer]: No new detector input for 34.46s.
+[WARN] [1778528465.460438789] [camera_to_base_transformer]: No new visual target for 34.46s.
+[WARN] [1778528468.457031305] [camera_to_base_transformer]: No new detector input for 37.46s.
+[WARN] [1778528468.460531839] [camera_to_base_transformer]: No new visual target for 37.46s.
+[WARN] [1778528470.458218920] [camera_to_base_transformer]: No new detector input for 39.46s.
+[WARN] [1778528470.463467115] [camera_to_base_transformer]: No new visual target for 39.46s.
+[WARN] [1778528473.457172682] [camera_to_base_transformer]: No new detector input for 42.46s.
+[WARN] [1778528473.460671590] [camera_to_base_transformer]: No new visual target for 42.46s.
+[WARN] [1778528475.457532050] [camera_to_base_transformer]: No new detector input for 44.46s.
+[WARN] [1778528475.460589584] [camera_to_base_transformer]: No new visual target for 44.46s.
+[WARN] [1778528478.456936355] [camera_to_base_transformer]: No new detector input for 47.46s.
+[WARN] [1778528478.460826929] [camera_to_base_transformer]: No new visual target for 47.46s.
+[WARN] [1778528480.457145850] [camera_to_base_transformer]: No new detector input for 49.46s.
+[WARN] [1778528481.457073660] [camera_to_base_transformer]: No new visual target for 50.46s.
+[WARN] [1778528483.457057948] [camera_to_base_transformer]: No new detector input for 52.46s.
+[WARN] [1778528483.460134774] [camera_to_base_transformer]: No new visual target for 52.46s.
+[WARN] [1778528485.457285819] [camera_to_base_transformer]: No new detector input for 54.46s.
+[WARN] [1778528485.460223145] [camera_to_base_transformer]: No new visual target for 54.46s.
+[WARN] [1778528487.457549940] [camera_to_base_transformer]: No new detector input for 56.46s.
+[WARN] [1778528487.460661433] [camera_to_base_transformer]: No new visual target for 56.46s.
+[WARN] [1778528490.457011375] [camera_to_base_transformer]: No new detector input for 59.46s.
+[WARN] [1778528490.460128368] [camera_to_base_transformer]: No new visual target for 59.46s.
+[WARN] [1778528492.457379831] [camera_to_base_transformer]: No new detector input for 61.46s.
+[WARN] [1778528492.460522324] [camera_to_base_transformer]: No new visual target for 61.46s.
+[WARN] [1778528495.457002935] [camera_to_base_transformer]: No new detector input for 64.46s.
+[WARN] [1778528495.460338927] [camera_to_base_transformer]: No new visual target for 64.46s.
+[WARN] [1778528497.456903519] [camera_to_base_transformer]: No new detector input for 66.46s.
+[WARN] [1778528498.456939540] [camera_to_base_transformer]: No new visual target for 67.46s.
+[WARN] [1778528499.457257518] [camera_to_base_transformer]: No new detector input for 68.46s.
+[WARN] [1778528500.457343373] [camera_to_base_transformer]: No new visual target for 69.46s.
+[WARN] [1778528502.457021583] [camera_to_base_transformer]: No new detector input for 71.46s.
+[WARN] [1778528502.459979618] [camera_to_base_transformer]: No new visual target for 71.46s.
+[WARN] [1778528505.457255523] [camera_to_base_transformer]: No new detector input for 74.46s.
+[WARN] [1778528505.461045597] [camera_to_base_transformer]: No new visual target for 74.46s.
+[WARN] [1778528508.457091174] [camera_to_base_transformer]: No new detector input for 77.46s.
+[WARN] [1778528508.460336707] [camera_to_base_transformer]: No new visual target for 77.46s.
+[WARN] [1778528510.457012344] [camera_to_base_transformer]: No new detector input for 79.46s.
+[WARN] [1778528511.457382949] [camera_to_base_transformer]: No new visual target for 80.46s.
+[WARN] [1778528512.457188598] [camera_to_base_transformer]: No new detector input for 81.46s.
+[WARN] [1778528514.456882145] [camera_to_base_transformer]: No new visual target for 83.46s.
+[WARN] [1778528515.457316750] [camera_to_base_transformer]: No new detector input for 84.46s.
+[WARN] [1778528516.456885108] [camera_to_base_transformer]: No new visual target for 85.46s.
+[WARN] [1778528518.457909153] [camera_to_base_transformer]: No new detector input for 87.46s.
+[WARN] [1778528518.460893313] [camera_to_base_transformer]: No new visual target for 87.46s.
+[WARN] [1778528521.457383394] [camera_to_base_transformer]: No new detector input for 90.46s.
+[WARN] [1778528521.460689261] [camera_to_base_transformer]: No new visual target for 90.46s.
+[WARN] [1778528524.457126593] [camera_to_base_transformer]: No new detector input for 93.46s.
+[WARN] [1778528524.460587710] [camera_to_base_transformer]: No new visual target for 93.46s.
+[WARN] [1778528527.456949543] [camera_to_base_transformer]: No new detector input for 96.46s.
+[WARN] [1778528527.460012619] [camera_to_base_transformer]: No new visual target for 96.46s.
+[WARN] [1778528530.456917661] [camera_to_base_transformer]: No new detector input for 99.46s.
+[WARN] [1778528530.459882654] [camera_to_base_transformer]: No new visual target for 99.46s.
+[WARN] [1778528532.457448878] [camera_to_base_transformer]: No new detector input for 101.46s.
+[WARN] [1778528532.460631829] [camera_to_base_transformer]: No new visual target for 101.46s.
+[WARN] [1778528535.457212999] [camera_to_base_transformer]: No new detector input for 104.46s.
+[WARN] [1778528535.460034450] [camera_to_base_transformer]: No new visual target for 104.46s.
+[WARN] [1778528538.457352119] [camera_to_base_transformer]: No new detector input for 107.46s.
+[WARN] [1778528538.460657778] [camera_to_base_transformer]: No new visual target for 107.46s.
+[WARN] [1778528540.458297838] [camera_to_base_transformer]: No new detector input for 109.46s.
+[WARN] [1778528540.467207275] [camera_to_base_transformer]: No new visual target for 109.46s.
+[WARN] [1778528543.457449338] [camera_to_base_transformer]: No new detector input for 112.46s.
+[WARN] [1778528543.460340081] [camera_to_base_transformer]: No new visual target for 112.46s.
+[WARN] [1778528546.456845881] [camera_to_base_transformer]: No new detector input for 115.46s.
+[WARN] [1778528546.460490622] [camera_to_base_transformer]: No new visual target for 115.46s.
+[WARN] [1778528548.456890603] [camera_to_base_transformer]: No new detector input for 117.46s.
+[WARN] [1778528548.460074596] [camera_to_base_transformer]: No new visual target for 117.46s.
+[WARN] [1778528550.456866576] [camera_to_base_transformer]: No new detector input for 119.46s.
+[WARN] [1778528551.457330146] [camera_to_base_transformer]: No new visual target for 120.46s.
+[WARN] [1778528552.457478632] [camera_to_base_transformer]: No new detector input for 121.46s.
+[WARN] [1778528554.457872856] [camera_to_base_transformer]: No new detector input for 123.46s.
+[WARN] [1778528554.461413514] [camera_to_base_transformer]: No new visual target for 123.46s.
+[WARN] [1778528556.457972872] [camera_to_base_transformer]: No new detector input for 125.46s.
+[WARN] [1778528557.457135445] [camera_to_base_transformer]: No new visual target for 126.46s.
+[WARN] [1778528559.457127587] [camera_to_base_transformer]: No new detector input for 128.46s.
+[WARN] [1778528559.460347621] [camera_to_base_transformer]: No new visual target for 128.46s.
+[WARN] [1778528562.456927428] [camera_to_base_transformer]: No new detector input for 131.46s.
+[WARN] [1778528562.459760754] [camera_to_base_transformer]: No new visual target for 131.46s.
+[WARN] [1778528564.457131446] [camera_to_base_transformer]: No new detector input for 133.46s.
+[WARN] [1778528564.459896814] [camera_to_base_transformer]: No new visual target for 133.46s.
+[WARN] [1778528567.457002996] [camera_to_base_transformer]: No new detector input for 136.46s.
+[WARN] [1778528567.460035489] [camera_to_base_transformer]: No new visual target for 136.46s.
+[WARN] [1778528569.457129308] [camera_to_base_transformer]: No new detector input for 138.46s.
+[WARN] [1778528569.460100009] [camera_to_base_transformer]: No new visual target for 138.46s.
+[WARN] [1778528572.458607065] [camera_to_base_transformer]: No new detector input for 141.46s.
+[WARN] [1778528572.464784300] [camera_to_base_transformer]: No new visual target for 141.46s.
+[WARN] [1778528575.456953039] [camera_to_base_transformer]: No new detector input for 144.46s.
+[WARN] [1778528575.459938824] [camera_to_base_transformer]: No new visual target for 144.46s.
+[WARN] [1778528577.457614477] [camera_to_base_transformer]: No new detector input for 146.46s.
+[WARN] [1778528577.460447178] [camera_to_base_transformer]: No new visual target for 146.46s.
+[WARN] [1778528580.456818409] [camera_to_base_transformer]: No new detector input for 149.46s.
+[WARN] [1778528580.459909277] [camera_to_base_transformer]: No new visual target for 149.46s.
+[WARN] [1778528582.457034224] [camera_to_base_transformer]: No new detector input for 151.46s.
+[WARN] [1778528582.459940550] [camera_to_base_transformer]: No new visual target for 151.46s.
+[WARN] [1778528584.457359873] [camera_to_base_transformer]: No new detector input for 153.46s.
+[WARN] [1778528584.460170574] [camera_to_base_transformer]: No new visual target for 153.46s.
+[WARN] [1778528587.457334015] [camera_to_base_transformer]: No new detector input for 156.46s.
+[WARN] [1778528587.460488882] [camera_to_base_transformer]: No new visual target for 156.46s.
+[WARN] [1778528589.457066708] [camera_to_base_transformer]: No new detector input for 158.46s.
+[WARN] [1778528590.457473532] [camera_to_base_transformer]: No new visual target for 159.46s.
+[WARN] [1778528592.457041393] [camera_to_base_transformer]: No new detector input for 161.46s.
+[WARN] [1778528592.460310886] [camera_to_base_transformer]: No new visual target for 161.46s.
+[WARN] [1778528594.457417086] [camera_to_base_transformer]: No new detector input for 163.46s.
+[WARN] [1778528594.460832120] [camera_to_base_transformer]: No new visual target for 163.46s.
+[WARN] [1778528597.456911400] [camera_to_base_transformer]: No new detector input for 166.46s.
+[WARN] [1778528597.459747268] [camera_to_base_transformer]: No new visual target for 166.46s.
+[WARN] [1778528599.457182345] [camera_to_base_transformer]: No new detector input for 168.46s.
+[WARN] [1778528599.460275254] [camera_to_base_transformer]: No new visual target for 168.46s.
+[WARN] [1778528601.457061749] [camera_to_base_transformer]: No new detector input for 170.46s.
+[WARN] [1778528602.457725450] [camera_to_base_transformer]: No new visual target for 171.46s.
+[WARN] [1778528603.458063110] [camera_to_base_transformer]: No new detector input for 172.46s.
+[WARN] [1778528605.457215017] [camera_to_base_transformer]: No new visual target for 174.46s.
+[WARN] [1778528606.457034929] [camera_to_base_transformer]: No new detector input for 175.46s.
+[WARN] [1778528608.458266124] [camera_to_base_transformer]: No new detector input for 177.46s.
+[WARN] [1778528608.464649108] [camera_to_base_transformer]: No new visual target for 177.46s.
+[WARN] [1778528611.457277320] [camera_to_base_transformer]: No new detector input for 180.46s.
+[WARN] [1778528611.460199438] [camera_to_base_transformer]: No new visual target for 180.46s.
+[WARN] [1778528614.458873969] [camera_to_base_transformer]: No new detector input for 183.46s.
+[WARN] [1778528614.463703374] [camera_to_base_transformer]: No new visual target for 183.46s.
+[WARN] [1778528617.457038878] [camera_to_base_transformer]: No new detector input for 186.46s.
+[WARN] [1778528617.460467869] [camera_to_base_transformer]: No new visual target for 186.46s.
+[WARN] [1778528619.457192203] [camera_to_base_transformer]: No new detector input for 188.46s.
+[WARN] [1778528620.457605324] [camera_to_base_transformer]: No new visual target for 189.46s.
+[WARN] [1778528622.456851652] [camera_to_base_transformer]: No new detector input for 191.46s.
+[WARN] [1778528622.463306095] [camera_to_base_transformer]: No new visual target for 191.46s.
+[WARN] [1778528624.457678144] [camera_to_base_transformer]: No new detector input for 193.46s.
+[WARN] [1778528624.460652387] [camera_to_base_transformer]: No new visual target for 193.46s.
+[WARN] [1778528627.456891179] [camera_to_base_transformer]: No new detector input for 196.46s.
+[WARN] [1778528627.460008047] [camera_to_base_transformer]: No new visual target for 196.46s.
+[WARN] [1778528629.457016507] [camera_to_base_transformer]: No new detector input for 198.46s.
+[WARN] [1778528629.459999792] [camera_to_base_transformer]: No new visual target for 198.46s.
+[WARN] [1778528632.456880002] [camera_to_base_transformer]: No new detector input for 201.46s.
+[WARN] [1778528632.459956453] [camera_to_base_transformer]: No new visual target for 201.46s.
+[WARN] [1778528635.457182246] [camera_to_base_transformer]: No new detector input for 204.46s.
+[WARN] [1778528635.461029820] [camera_to_base_transformer]: No new visual target for 204.46s.
+[WARN] [1778528637.457589868] [camera_to_base_transformer]: No new detector input for 206.46s.
+[WARN] [1778528637.460736360] [camera_to_base_transformer]: No new visual target for 206.46s.
+[WARN] [1778528640.458327405] [camera_to_base_transformer]: No new detector input for 209.46s.
+[WARN] [1778528640.466752885] [camera_to_base_transformer]: No new visual target for 209.46s.
+[WARN] [1778528643.456962490] [camera_to_base_transformer]: No new detector input for 212.46s.
+[WARN] [1778528643.460009524] [camera_to_base_transformer]: No new visual target for 212.46s.
+[WARN] [1778528646.456994031] [camera_to_base_transformer]: No new detector input for 215.46s.
+[WARN] [1778528646.460131190] [camera_to_base_transformer]: No new visual target for 215.46s.
+[WARN] [1778528648.457127823] [camera_to_base_transformer]: No new detector input for 217.46s.
+[WARN] [1778528648.461646937] [camera_to_base_transformer]: No new visual target for 217.46s.
+[WARN] [1778528650.457140741] [camera_to_base_transformer]: No new detector input for 219.46s.
+[WARN] [1778528650.462776019] [camera_to_base_transformer]: No new visual target for 219.46s.
+[WARN] [1778528652.457606616] [camera_to_base_transformer]: No new detector input for 221.46s.
+[WARN] [1778528652.460607442] [camera_to_base_transformer]: No new visual target for 221.46s.
+[WARN] [1778528655.457244079] [camera_to_base_transformer]: No new detector input for 224.46s.
+[WARN] [1778528655.460674029] [camera_to_base_transformer]: No new visual target for 224.46s.
+[WARN] [1778528657.457116124] [camera_to_base_transformer]: No new detector input for 226.46s.
+[WARN] [1778528657.460571365] [camera_to_base_transformer]: No new visual target for 226.46s.
+[WARN] [1778528660.457488670] [camera_to_base_transformer]: No new detector input for 229.46s.
+[WARN] [1778528660.461969701] [camera_to_base_transformer]: No new visual target for 229.46s.
+[WARN] [1778528663.456875136] [camera_to_base_transformer]: No new detector input for 232.46s.
+[WARN] [1778528663.459932712] [camera_to_base_transformer]: No new visual target for 232.46s.
+[WARN] [1778528666.456946144] [camera_to_base_transformer]: No new detector input for 235.46s.
+[WARN] [1778528666.460224345] [camera_to_base_transformer]: No new visual target for 235.46s.
+[WARN] [1778528669.457279319] [camera_to_base_transformer]: No new detector input for 238.46s.
+[WARN] [1778528669.463563429] [camera_to_base_transformer]: No new visual target for 238.46s.
+[WARN] [1778528672.457187871] [camera_to_base_transformer]: No new detector input for 241.46s.
+[WARN] [1778528672.460566822] [camera_to_base_transformer]: No new visual target for 241.46s.
+[WARN] [1778528675.457197966] [camera_to_base_transformer]: No new detector input for 244.46s.
+[WARN] [1778528675.460621166] [camera_to_base_transformer]: No new visual target for 244.46s.
+[WARN] [1778528678.457087646] [camera_to_base_transformer]: No new detector input for 247.46s.
+[WARN] [1778528678.459917848] [camera_to_base_transformer]: No new visual target for 247.46s.
+[WARN] [1778528681.456929827] [camera_to_base_transformer]: No new detector input for 250.46s.
+[WARN] [1778528681.460264903] [camera_to_base_transformer]: No new visual target for 250.46s.
+[WARN] [1778528684.457235050] [camera_to_base_transformer]: No new detector input for 253.46s.
+[WARN] [1778528684.460448626] [camera_to_base_transformer]: No new visual target for 253.46s.
+[WARN] [1778528687.458346106] [camera_to_base_transformer]: No new detector input for 256.46s.
+[WARN] [1778528687.461387515] [camera_to_base_transformer]: No new visual target for 256.46s.
+[WARN] [1778528690.457368334] [camera_to_base_transformer]: No new detector input for 259.46s.
+[WARN] [1778528690.460909409] [camera_to_base_transformer]: No new visual target for 259.46s.
+[WARN] [1778528692.457216763] [camera_to_base_transformer]: No new detector input for 261.46s.
+[WARN] [1778528692.460786880] [camera_to_base_transformer]: No new visual target for 261.46s.
+[WARN] [1778528695.457476324] [camera_to_base_transformer]: No new detector input for 264.46s.
+[WARN] [1778528695.462932478] [camera_to_base_transformer]: No new visual target for 264.46s.
+[WARN] [1778528697.457345755] [camera_to_base_transformer]: No new detector input for 266.46s.
+[WARN] [1778528698.457008096] [camera_to_base_transformer]: No new visual target for 267.46s.
+[WARN] [1778528700.457838734] [camera_to_base_transformer]: No new detector input for 269.46s.
+[WARN] [1778528700.464732634] [camera_to_base_transformer]: No new visual target for 269.46s.
+[WARN] [1778528703.457128551] [camera_to_base_transformer]: No new detector input for 272.46s.
+[WARN] [1778528703.460172168] [camera_to_base_transformer]: No new visual target for 272.46s.

@@ -1,0 +1,15 @@
+Received signal: 11
+Stack trace (most recent call last) in thread 30463:
+#12   Object "[0xffffffffffffffff]", at 0xffffffffffffffff, in 
+#11   Object "/lib/aarch64-linux-gnu/libc.so.6", at 0xffffa93b5edb, in 
+#10   Object "/lib/aarch64-linux-gnu/libc.so.6", at 0xffffa934d5b7, in 
+#9    Object "/lib/aarch64-linux-gnu/libstdc++.so.6", at 0xffffa95831fb, in 
+#8    Object "/opt/ros/humble/lib/libOrbbecSDK.so.2", at 0xffffa24ef8ff, in std::thread::_State_impl<std::thread::_Invoker<std::tuple<std::_Bind<void (*(std::shared_ptr<ObLogIntvlRecord>, unsigned long, spdlog::source_loc, spdlog::level::level_enum, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, char*))(std::shared_ptr<ObLogIntvlRecord>, unsigned long, spdlog::source_loc, spdlog::level::level_enum, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, char*&)> > > >::_M_run()
+#7    Object "/opt/ros/humble/lib/libOrbbecSDK.so.2", at 0xffffa24f18ab, in 
+#6    Object "/opt/ros/humble/lib/libOrbbecSDK.so.2", at 0xffffa2412e67, in 
+#5    Object "/opt/ros/humble/lib/libOrbbecSDK.so.2", at 0xffffa2ad3e57, in 
+#4    Object "/opt/ros/humble/lib/libOrbbecSDK.so.2", at 0xffffa2ad3cdb, in 
+#3    Object "/opt/ros/humble/lib/libOrbbecSDK.so.2", at 0xffffa2ac6ac7, in 
+#2    Object "/lib/aarch64-linux-gnu/libc.so.6", at 0xffffa9369950, in 
+#1    Object "linux-vdso.so.1", at 0xffffa999d7af, in 
+#0    Object "/opt/ros/humble/lib/liborbbec_camera.so", at 0xffffa32369a7, in signalHandler(int)

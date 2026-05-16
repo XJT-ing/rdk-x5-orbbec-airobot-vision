@@ -1,0 +1,12 @@
+[INFO] [1778528424.609054133] [duck_detector]: Duck detector node started, show_image=false, depth_range=[80, 1500] mm
+[WARN] [1778528426.064637339] [duck_detector]: Failed to convert duck pixel to camera 3D point
+[INFO] [1778528426.132219135] [duck_detector]: Camera info received: fx=516.248 fy=516.349 cx=317.111 cy=233.463 frame=camera_color_optical_frame
+[INFO] [1778528426.206405539] [duck_detector]: Publish duck_position: X=0.075 m, Y=0.110 m, Z=0.331 m (pixel u=434, v=405, depth=331 mm)
+[INFO] [1778528426.751571436] [duck_detector]: Publish duck_position: X=0.076 m, Y=0.109 m, Z=0.331 m (pixel u=435, v=404, depth=331 mm)
+[INFO] [1778528427.286559399] [duck_detector]: Publish duck_position: X=0.076 m, Y=0.110 m, Z=0.331 m (pixel u=435, v=405, depth=331 mm)
+[INFO] [1778528427.834537497] [duck_detector]: Publish duck_position: X=0.076 m, Y=0.109 m, Z=0.331 m (pixel u=435, v=404, depth=331 mm)
+[INFO] [1778528428.426784114] [duck_detector]: Publish duck_position: X=0.076 m, Y=0.109 m, Z=0.331 m (pixel u=435, v=404, depth=331 mm)
+[INFO] [1778528428.961690869] [duck_detector]: Publish duck_position: X=0.076 m, Y=0.109 m, Z=0.331 m (pixel u=435, v=404, depth=331 mm)
+[INFO] [1778528429.512120295] [duck_detector]: Publish duck_position: X=0.076 m, Y=0.110 m, Z=0.331 m (pixel u=435, v=405, depth=331 mm)
+[INFO] [1778528430.076338146] [duck_detector]: Publish duck_position: X=0.076 m, Y=0.109 m, Z=0.331 m (pixel u=435, v=404, depth=331 mm)
+[INFO] [1778528430.599358513] [duck_detector]: Publish duck_position: X=0.076 m, Y=0.110 m, Z=0.331 m (pixel u=435, v=405, depth=331 mm)

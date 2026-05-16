@@ -28,7 +28,10 @@
 - airbot_py: AIRBOT Python SDK
 """
 
+from contextlib import redirect_stderr, redirect_stdout
 from dataclasses import dataclass, field
+import io
+import logging
 import math
 import time
 from airbot_py.arm import AIRBOTPlay, RobotMode, SpeedProfile
@@ -40,6 +43,8 @@ class ArmSafetyConfig:
     workspace_min: list = field(default_factory=lambda: [0.10, -0.45, 0.02])
     workspace_max: list = field(default_factory=lambda: [1.00, 0.50, 0.70])
     max_cartesian_step: float = 0.10
+    command_reached_tolerance_m: float = 0.04
+    command_verify_timeout_sec: float = 1.5
     max_joint_speed: float = 1.20
     joint_limit_margin: float = 0.08
     joint_limits: list = field(default_factory=lambda: [
@@ -53,12 +58,20 @@ class ArmSafetyConfig:
 
 # AIRBOT Python SDK 包装器，提供安全检查和简化接口。
 class AirbotWrapper:
+    FAILURE_TEXT = (
+        "grpc error",
+        "move group planning ptp failed",
+        "planning failed",
+        "motion failed",
+        "not connected",
+    )
 
     def __init__(self, url="localhost", port=50001, safety_config=None):
         self.url = url
         self.port = port
         self.robot = None
         self.safety = safety_config or ArmSafetyConfig()
+        self.last_sdk_output = ""
 
     def connect(self, speed_profile="default"):
         """Connect to the AIRBOT server and set the initial speed profile."""
@@ -107,13 +120,25 @@ class AirbotWrapper:
         # 发送一个关节目标到机械臂，执行前进行安全检查。
         self.validate_joint_target(joint_target)
         self.robot.switch_mode(RobotMode.PLANNING_POS)
-        self.robot.move_to_joint_pos(joint_target)
+        self._call_sdk_checked(
+            "move_to_joint_pos",
+            self.robot.move_to_joint_pos,
+            joint_target,
+        )
 
     def move_cart_waypoints(self, waypoints):
         # 发送一系列笛卡尔路径点到机械臂，执行前进行安全检查。
         self.validate_cart_waypoints(waypoints)
         self.robot.switch_mode(RobotMode.PLANNING_WAYPOINTS)
-        self.robot.move_with_cart_waypoints(waypoints)
+        self._call_sdk_checked(
+            "move_with_cart_waypoints",
+            self.robot.move_with_cart_waypoints,
+            waypoints,
+        )
+        self._verify_cartesian_reached(
+            list(waypoints[-1][0]),
+            command_name="move_with_cart_waypoints",
+        )
 
     def move_to_cart_target_with_current_orientation(self, target_xyz):
         # 以当前末端位姿的方向，移动到指定的笛卡尔位置，执行前进行安全检查。
@@ -124,6 +149,7 @@ class AirbotWrapper:
         self.move_cart_waypoints([
             [list(target_xyz), current_quat],
         ])
+        return True
 
     def servo_joints(self, joint_target):
         # 以关节速度模式执行一个关节目标，适合需要快速响应的操作，执行前进行安全检查。
@@ -249,16 +275,112 @@ class AirbotWrapper:
         # 计算两个3D位置之间的欧几里得距离。
         return math.sqrt(sum((float(a[i]) - float(b[i])) ** 2 for i in range(3)))
 
-    def open_gripper(self):
-        #打开夹爪通过命令末端位置，通常夹爪打开时末端位置为 0.07 米，执行前进行安全检查。
+    def set_gripper_width(self, width, speed=None):
+        """Command the end-effector opening width in meters."""
+        if self.robot is None:
+            raise RuntimeError("Robot is not connected.")
+
+        target_width = float(width)
+        if target_width < 0.0:
+            raise ValueError("Gripper width must be non-negative.")
+
         self.robot.switch_mode(RobotMode.SERVO_JOINT_POS)
         for _ in range(50):
-            self.robot.servo_eef_pos([0.07])
+            self._call_sdk_checked(
+                "servo_eef_pos",
+                self.robot.servo_eef_pos,
+                [target_width],
+            )
             time.sleep(0.02)
+        return True
+
+    def command_gripper(self, command, target_width=0.0, speed=None):
+        """Handle structured gripper commands while keeping open/close aliases."""
+        command = str(command).strip().lower()
+        if command == "open":
+            return self.set_gripper_width(0.07, speed)
+        elif command == "close":
+            return self.set_gripper_width(target_width, speed)
+        elif command in ("width", "set_width", "set"):
+            return self.set_gripper_width(target_width, speed)
+        else:
+            raise ValueError(f"Unknown gripper command: {command}")
+
+    def open_gripper(self):
+        self.command_gripper("open", 0.07)
 
     def close_gripper(self):
-        # 关闭夹爪通过命令末端位置，通常夹爪关闭时末端位置为 0.0 米，执行前进行安全检查。
-        self.robot.switch_mode(RobotMode.SERVO_JOINT_POS)
-        for _ in range(50):
-            self.robot.servo_eef_pos([0.0])
-            time.sleep(0.02)
+        self.command_gripper("close", 0.0)
+
+    def _call_sdk_checked(self, name, func, *args, **kwargs):
+        """Call an SDK command and convert silent failures into exceptions."""
+        if self.robot is None:
+            raise RuntimeError("Robot is not connected.")
+
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        log_capture = io.StringIO()
+        log_handler = logging.StreamHandler(log_capture)
+        log_handler.setLevel(logging.DEBUG)
+        root_logger = logging.getLogger()
+        old_root_level = root_logger.level
+        root_logger.addHandler(log_handler)
+        if root_logger.level > logging.DEBUG:
+            root_logger.setLevel(logging.DEBUG)
+
+        try:
+            with redirect_stdout(stdout), redirect_stderr(stderr):
+                result = func(*args, **kwargs)
+        except Exception as exc:
+            output = self._collect_sdk_output(stdout, stderr, log_capture)
+            detail = f"; sdk output: {output}" if output else ""
+            raise RuntimeError(f"SDK call {name} raised {exc}{detail}") from exc
+        finally:
+            root_logger.removeHandler(log_handler)
+            root_logger.setLevel(old_root_level)
+
+        output = self._collect_sdk_output(stdout, stderr, log_capture)
+        self.last_sdk_output = output
+        lower_output = output.lower()
+        if any(token in lower_output for token in self.FAILURE_TEXT):
+            raise RuntimeError(f"SDK call {name} reported failure: {output}")
+
+        if result is False:
+            detail = f"; sdk output: {output}" if output else ""
+            raise RuntimeError(
+                f"SDK call {name} failed: returned {result!r}{detail}")
+
+        return result
+
+    def _collect_sdk_output(self, stdout, stderr, log_capture) -> str:
+        chunks = [
+            stdout.getvalue().strip(),
+            stderr.getvalue().strip(),
+            log_capture.getvalue().strip(),
+        ]
+        return "\n".join(chunk for chunk in chunks if chunk)
+
+    def _verify_cartesian_reached(self, target_xyz, command_name="cartesian"):
+        tolerance = float(self.safety.command_reached_tolerance_m)
+        timeout = float(self.safety.command_verify_timeout_sec)
+        deadline = time.time() + max(0.0, timeout)
+        last_position = None
+        last_distance = None
+
+        while True:
+            pose = self.get_end_pose()
+            if pose is None or len(pose) < 1:
+                raise RuntimeError(
+                    f"{command_name} reached check failed: cannot read end_pose; "
+                    f"target={target_xyz}; sdk output={self.last_sdk_output}")
+            last_position = list(pose[0])
+            last_distance = self._distance(last_position, target_xyz)
+            if last_distance <= tolerance:
+                return True
+            if time.time() >= deadline:
+                raise RuntimeError(
+                    f"{command_name} motion failed: target={target_xyz}, "
+                    f"current_end_pose={last_position}, "
+                    f"distance={last_distance:.4f}m > tolerance={tolerance:.4f}m; "
+                    f"captured SDK/logging output={self.last_sdk_output}")
+            time.sleep(0.05)

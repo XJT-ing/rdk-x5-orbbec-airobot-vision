@@ -1,7 +1,5 @@
-angry
-disgust
-fear
 happy
+low_mood
+negative_distress
 neutral
-sad
 surprise

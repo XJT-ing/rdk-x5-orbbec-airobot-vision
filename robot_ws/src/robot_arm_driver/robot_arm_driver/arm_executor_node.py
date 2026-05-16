@@ -22,7 +22,7 @@ from rclpy.node import Node
 from std_msgs.msg import Float64MultiArray, String
 
 from robot_arm_interface.airbot_wrapper import AirbotWrapper
-from robot_msgs.msg import ArmJointState
+from robot_msgs.msg import ArmJointState, GripperCommand
 
 
 class ArmExecutorNode(Node):
@@ -103,6 +103,12 @@ class ArmExecutorNode(Node):
             self.gripper_callback,
             10,
         )
+        self.gripper_command_sub = self.create_subscription(
+            GripperCommand,
+            '/robot_arm/gripper_command',
+            self.gripper_command_callback,
+            10,
+        )
         self.speed_sub = self.create_subscription(
             String,
             '/robot_arm/speed_profile',
@@ -118,7 +124,8 @@ class ArmExecutorNode(Node):
 
         self.get_logger().info(
             'ArmExecutorNode started. Listening on /robot_arm/target_joint, '
-            '/robot_arm/cart_target, /robot_arm/gripper_cmd, /robot_arm/speed_profile, '
+            '/robot_arm/cart_target, /robot_arm/gripper_cmd, /robot_arm/gripper_command, '
+            '/robot_arm/speed_profile, '
             '/robot_arm/reset_executor.')
         self.get_logger().info(
             'Publishing /robot_arm/joint_state, /robot_arm/end_pose, '
@@ -257,6 +264,18 @@ class ArmExecutorNode(Node):
             return
         self._try_start_command('gripper', command)
 
+    def gripper_command_callback(self, msg: GripperCommand):
+        command = msg.command.strip().lower()
+        if command not in ('open', 'close', 'width', 'set_width', 'set'):
+            self.get_logger().error(f'Unknown structured gripper command: {command}')
+            return
+        payload = {
+            'command': command,
+            'target_width': float(msg.target_width),
+            'speed': float(msg.speed),
+        }
+        self._try_start_command('gripper_command', payload)
+
     def speed_callback(self, msg: String):
         profile = msg.data.strip().lower()
         if profile not in ('slow', 'default', 'fast'):
@@ -324,6 +343,12 @@ class ArmExecutorNode(Node):
                         self.arm.open_gripper()
                     else:
                         self.arm.close_gripper()
+                elif command_type == 'gripper_command':
+                    self.arm.command_gripper(
+                        payload['command'],
+                        payload['target_width'],
+                        payload['speed'],
+                    )
                 elif command_type == 'speed_profile':
                     self.arm.set_speed_profile(payload)
                 else:
@@ -333,7 +358,12 @@ class ArmExecutorNode(Node):
             self.get_logger().info(f'Executor status: DONE {command_type}')
             self._publish_executor_status(self.DONE)
         except Exception as exc:
-            self._set_error(f'{command_type} command failed: {exc}')
+            current_end_pose = self._current_end_pose_for_log()
+            sdk_output = getattr(self.arm, 'last_sdk_output', '')
+            self._set_error(
+                f'Motion command failed: command_type={command_type}, '
+                f'target={payload}, current_end_pose={current_end_pose}, '
+                f'captured SDK/logging output={sdk_output}: {exc}')
             return
 
         self._publish_executor_status(self.IDLE)
@@ -405,6 +435,15 @@ class ArmExecutorNode(Node):
     def _set_error(self, message: str):
         self.get_logger().error(message)
         self._publish_executor_status(self.ERROR)
+
+    def _current_end_pose_for_log(self):
+        try:
+            pose = self.arm.get_end_pose()
+            if pose is None or len(pose) < 1:
+                return None
+            return list(pose[0])
+        except Exception as exc:
+            return f'unavailable: {exc}'
 
     def _copy_state_msg(self, msg: ArmJointState) -> ArmJointState:
         copied = ArmJointState()

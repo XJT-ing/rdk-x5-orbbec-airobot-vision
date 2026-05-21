@@ -46,10 +46,6 @@ class EmotionLandmarkCppNode : public rclcpp::Node {
     landmark_crop_margin_ = this->declare_parameter<double>("landmark_crop_margin", 0.35);
     conf_threshold_ = this->declare_parameter<double>("conf_threshold", 0.35);
 
-    low_mood_min_prob_ = this->declare_parameter<double>("low_mood_min_prob", 0.30);
-    low_mood_neutral_margin_ = this->declare_parameter<double>("low_mood_neutral_margin", 0.12);
-    low_mood_boost_ = this->declare_parameter<double>("low_mood_boost", 1.15);
-
     LoadLabels();
     LoadFaceDetector();
 
@@ -86,9 +82,6 @@ class EmotionLandmarkCppNode : public rclcpp::Node {
     RCLCPP_INFO(this->get_logger(), "publish vis: %s", vis_topic_.c_str());
     RCLCPP_INFO(this->get_logger(), "show_image: %s", show_image_ ? "true" : "false");
     RCLCPP_INFO(this->get_logger(), "labels count: %zu", labels_.size());
-    RCLCPP_INFO(this->get_logger(), "low_mood_min_prob: %.2f", low_mood_min_prob_);
-    RCLCPP_INFO(this->get_logger(), "low_mood_neutral_margin: %.2f", low_mood_neutral_margin_);
-    RCLCPP_INFO(this->get_logger(), "low_mood_boost: %.2f", low_mood_boost_);
   }
 
   ~EmotionLandmarkCppNode() override {
@@ -121,10 +114,6 @@ class EmotionLandmarkCppNode : public rclcpp::Node {
     std::string emotion = "unknown";
     float confidence = 0.0f;
     std::vector<float> probs;
-    std::string raw_emotion = "unknown";
-    int raw_class_id = -1;
-    float raw_confidence = 0.0f;
-    bool low_mood_rescue = false;
   };
 
   void LoadLabels() {
@@ -781,42 +770,11 @@ class EmotionLandmarkCppNode : public rclcpp::Node {
       }
     }
 
-    int final_cls = best;
-    float final_conf = probs[best];
-    std::string final_emotion = labels_[best];
-    bool low_mood_rescue = false;
-
-    if (num >= 5) {
-      float low_prob = probs[1];
-      float neutral_prob = probs[3];
-
-      bool neutral_close_to_low =
-          (best == 3) &&
-          (low_prob >= static_cast<float>(low_mood_min_prob_)) &&
-          ((neutral_prob - low_prob) <= static_cast<float>(low_mood_neutral_margin_));
-
-      bool mild_low_boost =
-          (best != 1) &&
-          (low_prob >= static_cast<float>(low_mood_min_prob_)) &&
-          ((low_prob * static_cast<float>(low_mood_boost_)) >= probs[best]);
-
-      if (neutral_close_to_low || mild_low_boost) {
-        final_cls = 1;
-        final_conf = low_prob;
-        final_emotion = "possible_low_mood";
-        low_mood_rescue = true;
-      }
-    }
-
     result.ok = true;
-    result.class_id = final_cls;
-    result.emotion = final_emotion;
-    result.confidence = final_conf;
+    result.class_id = best;
+    result.emotion = labels_[best];
+    result.confidence = probs[best];
     result.probs = probs;
-    result.raw_class_id = best;
-    result.raw_emotion = labels_[best];
-    result.raw_confidence = probs[best];
-    result.low_mood_rescue = low_mood_rescue;
 
     return result;
   }
@@ -850,7 +808,6 @@ class EmotionLandmarkCppNode : public rclcpp::Node {
   cv::Scalar GetEmotionColor(const std::string &emotion) {
     if (emotion == "happy") return cv::Scalar(0, 255, 0);
     if (emotion == "low_mood") return cv::Scalar(255, 128, 0);
-    if (emotion == "possible_low_mood") return cv::Scalar(255, 128, 0);
     if (emotion == "negative_distress") return cv::Scalar(255, 0, 0);
     if (emotion == "neutral") return cv::Scalar(0, 180, 255);
     if (emotion == "surprise") return cv::Scalar(255, 255, 0);
@@ -912,25 +869,12 @@ class EmotionLandmarkCppNode : public rclcpp::Node {
       emotion_text = es.str();
     }
 
-    std::ostringstream raw_text;
-    if (emotion_result.ok) {
-      raw_text << "raw=" << emotion_result.raw_emotion
-               << " " << std::fixed << std::setprecision(2)
-               << emotion_result.raw_confidence;
-      if (emotion_result.low_mood_rescue) {
-        raw_text << "  low_mood_rescue";
-      }
-    } else {
-      raw_text << "raw=unknown";
-    }
-
     std::ostringstream ms_text;
     ms_text << "total=" << std::fixed << std::setprecision(1) << total_ms << " ms"
             << " landmarks=" << (has_landmarks ? "true" : "false");
 
-    int y0 = std::max(30, crop_box.top - 70);
-    int y1 = std::max(60, crop_box.top - 45);
-    int y2 = std::max(90, crop_box.top - 15);
+    int y0 = std::max(30, crop_box.top - 45);
+    int y1 = std::max(60, crop_box.top - 15);
 
     cv::putText(
         vis,
@@ -943,19 +887,10 @@ class EmotionLandmarkCppNode : public rclcpp::Node {
 
     cv::putText(
         vis,
-        raw_text.str(),
+        ms_text.str(),
         cv::Point(crop_box.left, y1),
         cv::FONT_HERSHEY_SIMPLEX,
-        0.55,
-        color,
-        2);
-
-    cv::putText(
-        vis,
-        ms_text.str(),
-        cv::Point(crop_box.left, y2),
-        cv::FONT_HERSHEY_SIMPLEX,
-        0.55,
+        0.6,
         color,
         2);
 
@@ -998,12 +933,6 @@ class EmotionLandmarkCppNode : public rclcpp::Node {
       ss << ",\"class_id\":" << emotion_result.class_id;
       ss << ",\"confidence\":" << std::fixed << std::setprecision(4)
          << emotion_result.confidence;
-      ss << ",\"raw_emotion\":\"" << emotion_result.raw_emotion << "\"";
-      ss << ",\"raw_class_id\":" << emotion_result.raw_class_id;
-      ss << ",\"raw_confidence\":" << std::fixed << std::setprecision(4)
-         << emotion_result.raw_confidence;
-      ss << ",\"low_mood_rescue\":"
-         << (emotion_result.low_mood_rescue ? "true" : "false");
 
       ss << ",\"status\":\""
          << (emotion_result.confidence >= conf_threshold_ ? "ok" : "low_confidence")
@@ -1012,10 +941,6 @@ class EmotionLandmarkCppNode : public rclcpp::Node {
       ss << ",\"emotion\":\"unknown\"";
       ss << ",\"class_id\":-1";
       ss << ",\"confidence\":0.0";
-      ss << ",\"raw_emotion\":\"unknown\"";
-      ss << ",\"raw_class_id\":-1";
-      ss << ",\"raw_confidence\":0.0";
-      ss << ",\"low_mood_rescue\":false";
       ss << ",\"status\":\"no_result\"";
     }
 
@@ -1048,9 +973,6 @@ class EmotionLandmarkCppNode : public rclcpp::Node {
   double face_margin_;
   double landmark_crop_margin_;
   double conf_threshold_;
-  double low_mood_min_prob_;
-  double low_mood_neutral_margin_;
-  double low_mood_boost_;
 
   int emotion_input_size_ = 224;
   int frame_count_ = 0;

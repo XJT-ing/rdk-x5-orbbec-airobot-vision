@@ -130,6 +130,18 @@ class CameraToBaseTransformer(Node):
             lambda msg: self.object_callback(msg, 'box', '/box_position'),
             10,
         )
+        self.bottle_sub = self.create_subscription(
+            PointStamped,
+            '/detect_yolo/bottle_position',
+            lambda msg: self.object_callback(msg, 'bottle', '/detect_yolo/bottle_position'),
+            10,
+        )
+        self.apple_yolo_sub = self.create_subscription(
+            PointStamped,
+            '/detect_yolo/apple_position',
+            lambda msg: self.object_callback(msg, 'apple', '/detect_yolo/apple_position'),
+            10,
+        )
         self.target_pub = self.create_publisher(
             VisualTarget,
             '/visual_target_base',

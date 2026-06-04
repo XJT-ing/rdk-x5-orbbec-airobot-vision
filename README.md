@@ -95,18 +95,6 @@ source /opt/tros/humble/setup.bash
 
 ## 启动步骤
 
-### 方式一：一键启动（推荐）
-
-```bash
-# 先确保 AIRBOT 服务已启动
-bash /home/sunrise/robot/start_airbot_can0.sh
-
-# 启动全链路
-bash /home/sunrise/robot/start_auto_grasp.sh
-```
-
-### 方式二：分步启动
-
 **终端 0 — AIRBOT 服务**
 
 ```bash

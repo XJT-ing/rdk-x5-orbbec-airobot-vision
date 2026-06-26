@@ -3,7 +3,7 @@
 所有发往机械臂执行器的命令都通过此端口。任务层各模块不直接持有 publisher。
 """
 
-from geometry_msgs.msg import PointStamped
+from geometry_msgs.msg import PointStamped, Pose, PoseArray
 from std_msgs.msg import Float64MultiArray, String
 
 
@@ -22,12 +22,28 @@ class ArmCommandPort:
             Float64MultiArray, "/robot_arm/target_joint", 10)
         self._cart_pub = node.create_publisher(
             PointStamped, "/robot_arm/cart_target", 10)
+        self._cart_waypoints_pub = node.create_publisher(
+            PoseArray, "/robot_arm/cart_waypoints", 10)
         self._gripper_pub = node.create_publisher(
             String, "/robot_arm/gripper_cmd", 10)
         self._speed_pub = node.create_publisher(
             String, "/robot_arm/speed_profile", 10)
         self._reset_pub = node.create_publisher(
             String, "/robot_arm/reset_executor", 10)
+
+    def _debug_or_info(self, message: str):
+        verbose = False
+        try:
+            verbose = (
+                self._node.has_parameter('verbose_debug')
+                and bool(self._node.get_parameter('verbose_debug').value)
+            )
+        except Exception:
+            verbose = False
+        if verbose:
+            self._node.get_logger().info(message)
+        else:
+            self._node.get_logger().debug(message)
 
     # -- Joint target --------------------------------------------------------
 
@@ -36,8 +52,7 @@ class ArmCommandPort:
         msg.data = [float(v) for v in joint_pos]
         self._joint_pub.publish(msg)
         if reason:
-            self._node.get_logger().info(
-                f"Published joint target, reason={reason}")
+            self._debug_or_info(f"Published joint target, reason={reason}")
 
     # -- Cartesian target ----------------------------------------------------
 
@@ -50,8 +65,30 @@ class ArmCommandPort:
         msg.point.z = float(xyz[2])
         self._cart_pub.publish(msg)
         if reason:
-            self._node.get_logger().info(
-                f"Published cart target, reason={reason}")
+            self._debug_or_info(f"Published cart target, reason={reason}")
+
+    def publish_cart_waypoints(self, points: list[list[float]], frame_id: str = "base_link"):
+        if points is None or len(points) < 2:
+            raise ValueError("Cartesian waypoints require at least 2 points.")
+
+        msg = PoseArray()
+        msg.header.stamp = self._node.get_clock().now().to_msg()
+        msg.header.frame_id = frame_id or self._base_frame
+
+        for point in points:
+            if point is None or len(point) != 3:
+                raise ValueError("Each Cartesian waypoint must contain x, y, z.")
+            pose = Pose()
+            pose.position.x = float(point[0])
+            pose.position.y = float(point[1])
+            pose.position.z = float(point[2])
+            pose.orientation.x = 0.0
+            pose.orientation.y = 0.0
+            pose.orientation.z = 0.0
+            pose.orientation.w = 1.0
+            msg.poses.append(pose)
+
+        self._cart_waypoints_pub.publish(msg)
 
     # -- Gripper -------------------------------------------------------------
 
@@ -60,8 +97,7 @@ class ArmCommandPort:
         msg.data = command
         self._gripper_pub.publish(msg)
         if reason:
-            self._node.get_logger().info(
-                f"Published gripper command={command}, reason={reason}")
+            self._debug_or_info(f"Published gripper command={command}, reason={reason}")
 
     # -- Speed profile -------------------------------------------------------
 
@@ -70,8 +106,7 @@ class ArmCommandPort:
         msg.data = profile
         self._speed_pub.publish(msg)
         if reason:
-            self._node.get_logger().info(
-                f"Published speed_profile={profile}, reason={reason}")
+            self._debug_or_info(f"Published speed_profile={profile}, reason={reason}")
 
     # -- Reset / clear-error -------------------------------------------------
 

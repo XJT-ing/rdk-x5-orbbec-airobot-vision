@@ -14,11 +14,12 @@ not applied so that the task layer always receives clear feedback.
 
 import math
 import threading
+import time
 import traceback
 from typing import Any, Optional, Tuple
 
 import rclpy
-from geometry_msgs.msg import PointStamped, PoseStamped
+from geometry_msgs.msg import PointStamped, PoseArray, PoseStamped
 from rclpy.node import Node
 from std_msgs.msg import Float64MultiArray, String
 
@@ -42,8 +43,9 @@ class ArmExecutorNode(Node):
         self.declare_parameter('do_init', True)
         self.declare_parameter(
             'init_joint_pos_deg',
-            [0.0, -45.0, 120.0, -90.0, 90.0, 90.0],
+            [0.0, -45.0, 110.0, -90.0, 90.0, 0.0],
         )
+        self.declare_parameter('verbose_log', False)
 
         # Conservative AIRBOT Play joint limits.
         # Confirm the exact hardware model before widening these values.
@@ -59,6 +61,10 @@ class ArmExecutorNode(Node):
         )
         self.declare_parameter('rescue_warning_margin_rad', 0.20)
         self.declare_parameter('rescue_safe_margin_rad', 0.40)
+        self.declare_parameter('sdk_ready_check_enabled', True)
+        self.declare_parameter('sdk_ready_wait_timeout_sec', 3.0)
+        self.declare_parameter('sdk_ready_poll_interval_sec', 0.10)
+        self.declare_parameter('post_sdk_motion_settle_sec', 0.8)
 
         self.arm = AirbotWrapper(url='localhost', port=50001)
         self.sdk_lock = threading.Lock()
@@ -67,6 +73,7 @@ class ArmExecutorNode(Node):
         self.active_thread = None
         self.last_state_msg = None
         self.last_pose_msg = None
+        self.last_sdk_motion_finish_time = None
 
         self.state_pub = self.create_publisher(
             ArmJointState, '/robot_arm/joint_state', 10)
@@ -84,7 +91,9 @@ class ArmExecutorNode(Node):
         with self.sdk_lock:
             self.arm.set_speed_profile('default')
         self.get_logger().info(
-            'Arm initialized; executor is ready and speed profile is default.')
+            'ArmExecutorNode ready: init_joint_pos_deg='
+            f'{list(self.get_parameter("init_joint_pos_deg").value)}, '
+            'speed_profile=default.')
 
         self.state_timer = self.create_timer(0.1, self.publish_state)
 
@@ -98,6 +107,12 @@ class ArmExecutorNode(Node):
             PointStamped,
             '/robot_arm/cart_target',
             self.cart_target_callback,
+            10,
+        )
+        self.cart_waypoints_sub = self.create_subscription(
+            PoseArray,
+            '/robot_arm/cart_waypoints',
+            self.cart_waypoints_callback,
             10,
         )
         self.gripper_sub = self.create_subscription(
@@ -125,17 +140,10 @@ class ArmExecutorNode(Node):
             10,
         )
 
-        self.get_logger().info(
-            'ArmExecutorNode started. Listening on /robot_arm/target_joint, '
-            '/robot_arm/cart_target, /robot_arm/gripper_cmd, /robot_arm/gripper_command, '
-            '/robot_arm/speed_profile, '
-            '/robot_arm/reset_executor.')
-        self.get_logger().info(
-            'Publishing /robot_arm/joint_state, /robot_arm/end_pose, '
-            '/robot_arm/executor_status.')
-        self.get_logger().info(
-            'Joint limits active: all 6 joints checked; '
-            'targets exceeding limits are rejected without automatic clamping.')
+        self._debug_or_info(
+            'ArmExecutorNode topics ready: target_joint, cart_target, cart_waypoints, '
+            'gripper_cmd, gripper_command, speed_profile, reset_executor; '
+            'publishing joint_state, end_pose, executor_status.')
 
     # ------------------------------------------------------------------
     # Joint limit helpers
@@ -216,7 +224,7 @@ class ArmExecutorNode(Node):
             self._publish_executor_status(self.ERROR)
             return
 
-        self.get_logger().info(
+        self._debug_or_info(
             f'Moving to init joint pose deg={[float(v) for v in deg]}')
         try:
             with self.sdk_lock:
@@ -224,7 +232,7 @@ class ArmExecutorNode(Node):
                 self.arm.get_state()
                 self.arm.move_joints(rad)
                 self._publish_executor_status(self.DONE)
-            self.get_logger().info('Init pose reached.')
+            self._debug_or_info('Init pose reached.')
         except Exception as exc:
             self._set_error(f'Init pose failed: {exc}')
         finally:
@@ -389,6 +397,35 @@ class ArmExecutorNode(Node):
         target = [float(msg.point.x), float(msg.point.y), float(msg.point.z)]
         self._try_start_command('cartesian', target)
 
+    def cart_waypoints_callback(self, msg: PoseArray):
+        frame_id = msg.header.frame_id.strip()
+        if frame_id and frame_id != 'base_link':
+            self.get_logger().error(
+                f'Invalid cart waypoints frame_id={frame_id}; expected base_link.')
+            return
+
+        count = len(msg.poses)
+        self._debug_or_info(f'cart_waypoints received: n={count}')
+        if count < 2:
+            self.get_logger().error(
+                f'Invalid cart_waypoints count: {count} (expected >= 2).')
+            return
+
+        points = []
+        for index, pose in enumerate(msg.poses):
+            point = [
+                float(pose.position.x),
+                float(pose.position.y),
+                float(pose.position.z),
+            ]
+            if not all(math.isfinite(v) for v in point):
+                self.get_logger().error(
+                    f'Invalid cart_waypoints[{index}] contains non-finite position: {point}')
+                return
+            points.append(point)
+
+        self._try_start_command('cart_waypoints', points)
+
     def gripper_callback(self, msg: String):
         command = msg.data.strip().lower()
         if command not in ('open', 'close'):
@@ -427,9 +464,15 @@ class ArmExecutorNode(Node):
 
         with self.status_lock:
             if self.executor_state != self.ERROR:
-                self.get_logger().info(
+                self._debug_or_info(
                     f'clear_error received while executor is {self.executor_state}; no state change.')
                 self._publish_executor_status_locked(self.executor_state)
+                return
+
+            if self.active_thread is not None and self.active_thread.is_alive():
+                self.get_logger().warning(
+                    'clear_error received while active command is still running; keep ERROR.')
+                self._publish_executor_status_locked(self.ERROR)
                 return
 
             self.get_logger().warning('clear_error received; executor ERROR cleared to IDLE.')
@@ -455,10 +498,10 @@ class ArmExecutorNode(Node):
                 return
 
             self.executor_state = self.BUSY
-            self.get_logger().info(f'Executor status: BUSY {command_type}')
+            self._debug_or_info(f'Executor status: BUSY {command_type}')
             self._publish_executor_status_locked(self.BUSY)
 
-        self.get_logger().info(f'Start {command_type} command: {payload}')
+        self._debug_or_info(f'Start {command_type} command: {payload}')
         thread = threading.Thread(
             target=self._execute_command,
             args=(command_type, payload),
@@ -471,9 +514,27 @@ class ArmExecutorNode(Node):
         try:
             with self.sdk_lock:
                 if command_type == 'joint':
+                    if not self._wait_until_sdk_ready(command_type):
+                        return
                     self.arm.move_joints(payload)
                 elif command_type == 'cartesian':
+                    if not self._wait_until_sdk_ready(command_type):
+                        return
                     self.arm.move_to_cart_target_with_current_orientation(payload)
+                elif command_type == 'cart_waypoints':
+                    if not self._wait_until_sdk_ready(command_type):
+                        return
+                    self._debug_or_info(
+                        'Executing cartesian waypoints with current orientation')
+                    end_pose = self.arm.get_end_pose()
+                    if end_pose is None or len(end_pose) < 2:
+                        raise RuntimeError('Failed to read current end pose.')
+                    current_quat = list(end_pose[1])
+                    waypoints = [
+                        [[float(point[0]), float(point[1]), float(point[2])], current_quat]
+                        for point in payload
+                    ]
+                    self.arm.move_cart_waypoints(waypoints)
                 elif command_type == 'gripper':
                     if payload == 'open':
                         self.arm.open_gripper()
@@ -490,12 +551,25 @@ class ArmExecutorNode(Node):
                 else:
                     raise ValueError(f'Unsupported command type: {command_type}')
 
-            self.get_logger().info(f'{command_type} command done.')
-            self.get_logger().info(f'Executor status: DONE {command_type}')
+                if command_type in ('joint', 'cartesian', 'cart_waypoints'):
+                    self.last_sdk_motion_finish_time = self._now_sec()
+
+            self._debug_or_info(f'{command_type} command done.')
+            self._debug_or_info(f'Executor status: DONE {command_type}')
             self._publish_executor_status(self.DONE)
         except Exception as exc:
             current_end_pose = self._current_end_pose_for_log()
             sdk_output = getattr(self.arm, 'last_sdk_output', '')
+            if self._is_sdk_busy_exception(exc, sdk_output):
+                self.get_logger().warning(
+                    f'SDK_BUSY / REJECTED_BUSY: command_type={command_type}, '
+                    f'target={payload}, current_end_pose={current_end_pose}, '
+                    f'captured SDK/logging output={sdk_output}: {exc}')
+                self._publish_executor_status(self.REJECTED_BUSY)
+                self._publish_executor_status(self.IDLE)
+                return
+            if command_type == 'cart_waypoints':
+                self.get_logger().error(f'cart_waypoints failed: {exc}')
             self._set_error(
                 f'Motion command failed: command_type={command_type}, '
                 f'target={payload}, current_end_pose={current_end_pose}, '
@@ -503,6 +577,72 @@ class ArmExecutorNode(Node):
             return
 
         self._publish_executor_status(self.IDLE)
+
+    def _wait_until_sdk_ready(self, command_type: str) -> bool:
+        if not bool(self.get_parameter('sdk_ready_check_enabled').value):
+            return True
+
+        timeout_sec = float(self.get_parameter('sdk_ready_wait_timeout_sec').value)
+        poll_sec = float(self.get_parameter('sdk_ready_poll_interval_sec').value)
+        settle_sec = float(self.get_parameter('post_sdk_motion_settle_sec').value)
+        start = self._now_sec()
+        last_state = 'unavailable'
+        last_logged_state = None
+
+        while self._now_sec() - start <= timeout_sec:
+            state_available = False
+            try:
+                last_state = str(self.arm.get_state())
+                state_available = True
+            except Exception as exc:
+                last_state = f'unavailable: {exc}'
+
+            if state_available:
+                state_text = last_state.strip().lower()
+                if last_state != last_logged_state:
+                    self.get_logger().info(
+                        f'SDK ready wait before {command_type}: arm_state={last_state}')
+                    last_logged_state = last_state
+                if self._sdk_state_accepting(state_text):
+                    return True
+                if not self._sdk_state_busy(state_text):
+                    return True
+            else:
+                if self.last_sdk_motion_finish_time is None:
+                    return True
+                if self._now_sec() - self.last_sdk_motion_finish_time >= settle_sec:
+                    return True
+
+            time.sleep(max(0.0, poll_sec))
+
+        self.get_logger().warning(
+            f'SDK not ready after {timeout_sec:.2f} sec; reject {command_type} '
+            f'as REJECTED_BUSY. arm_state={last_state}')
+        self._publish_executor_status(self.REJECTED_BUSY)
+        self._publish_executor_status(self.IDLE)
+        return False
+
+    @staticmethod
+    def _sdk_state_busy(state_text: str) -> bool:
+        busy_words = ('moving', 'busy', 'running', 'executing', 'planning')
+        return any(word in state_text for word in busy_words)
+
+    @staticmethod
+    def _sdk_state_accepting(state_text: str) -> bool:
+        ready_words = ('idle', 'ready', 'standby', 'stopped', 'stop')
+        return any(word in state_text for word in ready_words)
+
+    @staticmethod
+    def _is_sdk_busy_exception(exc: Exception, sdk_output: str) -> bool:
+        text = f'{sdk_output} {exc}'.lower()
+        if 'waiting for arm to finish moving' in text:
+            return True
+        if 'arm to finish moving' in text:
+            return True
+        return 'move group planning ptp failed' in text and 'waiting' in text
+
+    def _now_sec(self) -> float:
+        return self.get_clock().now().nanoseconds / 1e9
 
     # ------------------------------------------------------------------
     # State publishing
@@ -571,6 +711,12 @@ class ArmExecutorNode(Node):
     def _set_error(self, message: str):
         self.get_logger().error(message)
         self._publish_executor_status(self.ERROR)
+
+    def _debug_or_info(self, message: str):
+        if bool(self.get_parameter('verbose_log').value):
+            self.get_logger().info(message)
+        else:
+            self.get_logger().debug(message)
 
     def _current_end_pose_for_log(self):
         try:

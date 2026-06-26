@@ -130,18 +130,6 @@ class CameraToBaseTransformer(Node):
             lambda msg: self.object_callback(msg, 'box', '/box_position'),
             10,
         )
-        self.bottle_sub = self.create_subscription(
-            PointStamped,
-            '/detect_yolo/bottle_position',
-            lambda msg: self.object_callback(msg, 'bottle', '/detect_yolo/bottle_position'),
-            10,
-        )
-        self.apple_yolo_sub = self.create_subscription(
-            PointStamped,
-            '/detect_yolo/apple_position',
-            lambda msg: self.object_callback(msg, 'apple', '/detect_yolo/apple_position'),
-            10,
-        )
         self.target_pub = self.create_publisher(
             VisualTarget,
             '/visual_target_base',
@@ -170,11 +158,11 @@ class CameraToBaseTransformer(Node):
     def _declare_parameters(self):
         self.declare_parameter(
             'cam_to_gripper_translation',
-            [-0.0830395307186257, 0.008112286716840913, 0.08580828291231507],
+            [0.09135190476527959, -0.07201739513738753, 0.011442796927694777],
         )
         self.declare_parameter(
             'cam_to_gripper_quaternion_xyzw',
-            [-0.49270434706957716, 0.5001884081237661, -0.49995706645552335, 0.5070472507158893],
+            [-0.1219551044160354, 0.694256163711082, 0.125630634909801, 0.6981062062667869],
         )
         self.declare_parameter('target_frame', 'base_link')
         self.declare_parameter('allowed_camera_frames', ['camera_color_optical_frame'])

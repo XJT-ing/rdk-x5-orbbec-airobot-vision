@@ -2,94 +2,145 @@
 
 AIRBOT Play + Orbbec 视觉抓取项目。
 
-  完整抓取指令流程                                                                                                      
-  终端 0（前置）— 启动 CAN 总线连接                                                                                     
-  sudo airbot_server -i can1 -p 50001
+当前唯一推荐的实机主链路：
 
-  保持运行，不要关闭。
+```text
+duck_detector_node
+  -> /duck_position
+  -> camera_to_base_transform.py
+  -> /visual_target_base
+  -> grasp_task_open_loop.py
+  -> ArmCommandPort
+  -> arm_executor_node.py
+  -> AIRBOT SDK
+```
 
-  ---
-  终端 1 — 机械臂归位
+Default approach behavior:
+- `blend_approach_enabled: true`
+- The recommended open_loop main path is the AIRBOT official multi-waypoint
+  blend through the internal `/robot_arm/cart_waypoints` path.
+- Current main flow:
+  `WAIT_PRE_TARGET -> PRE_OPEN_GRIPPER -> MOVE_APPROACH_BLEND -> CLOSE_GRIPPER -> MOVE_LIFT -> RETURN_INIT_POSE`.
+- The sequential `MOVE_PRE_GRASP -> MOVE_GRASP` approach remains available
+  only as fallback, and is also used when `blend_approach_enabled: false`.
+- `CLOSE_GRIPPER` is not blended into the trajectory: the arm must stop at the
+  grasp point, close the gripper, and only then lift.
+- This does not use official `ArmControlOptions` or `blend_radius` parameters.
+  It uses the existing SDK `PLANNING_WAYPOINTS / move_with_cart_waypoints`
+  path through `AirbotWrapper.move_cart_waypoints()`.
+- External callers and LLM modules should still publish only
+  `/visual_target_base` in `base_link`. Do not publish `/robot_arm/cart_waypoints`
+  directly; it is an internal execution topic between `grasp_task_open_loop.py`
+  and `arm_executor_node.py`.
 
-  python3 /home/sunrise/robot/hand_to_eye/move_to_lower_home.py
+不要把 `hand_to_eye/auto_pick_from_base.py` 当作主抓取入口；它只保留为 legacy/debug 调试脚本。当前主抓取节点是 `grasp_task_open_loop.py`，执行器节点是 `arm_executor_node.py`。
 
-  等待执行完成（打印 "Moved to lower, more tolerant home pose." 后关闭即可）。
+当前唯一推荐启动入口：
 
-  ---
-  终端 2 — 启动相机
+```bash
+ros2 launch robot_bringup open_loop_grasp.launch.py
+```
 
-  source /opt/ros/humble/setup.bash
-  source /home/sunrise/robot/Orbbec_ws/install/setup.bash
-  ros2 launch orbbec_camera gemini2.launch.py \
-      enable_depth:=true \
-      enable_ir:=false \
-      enable_accel:=false \
-      enable_gyro:=false \
-      enable_point_cloud:=false \
-      enable_colored_point_cloud:=false \
-      enable_d2c_viewer:=false \
-      color_width:=640 \
-      color_height:=480 \
-      color_fps:=30
+该 launch 只应启动：
 
-  ---
-  终端 3 — 检测节点
+```text
+arm_executor_node.py
+grasp_task_open_loop.py
+```
 
-  source /opt/ros/humble/setup.bash
-  source /home/sunrise/robot/Orbbec_ws/install/setup.bash
-  ros2 run detector duck_detector_node
+## X5 实机路径
 
-  ▎ 其他物体：把 duck 换成 apple 或 box
+```text
+仓库根目录：/home/sunrise/robot
+ROS2 工作区：/home/sunrise/robot/robot_ws
+Orbbec 工作区：/home/sunrise/robot/Orbbec_ws
+转换脚本：/home/sunrise/robot/hand_to_eye/camera_to_base_transform.py
+```
 
-  查看 YOLO 检测结果（如果用 YOLO 替代独立检测器）：
+## 推荐启动顺序
 
-  source /opt/ros/humble/setup.bash
-  source /home/sunrise/robot/Orbbec_ws/install/setup.bash
-  ros2 topic echo /detect_yolo/bottle_position   # 瓶子
+终端 0：启动 AIRBOT 服务
 
-  ---
-  终端 4 — 自动抓取
+```bash
+sudo airbot_server -i can1 -p 50001
+```
 
-  source /opt/ros/humble/setup.bash
-  source /home/sunrise/robot/robot_ws/install/setup.bash
-  ros2 launch robot_bringup open_loop_grasp.launch.py
+终端 1：启动 Orbbec 相机
 
-  ---
-  终端 5 — 相机坐标到基座变换
-
-  source /opt/ros/humble/setup.bash
-  source /home/sunrise/robot/Orbbec_ws/install/setup.bash
-  source /home/sunrise/robot/robot_ws/install/setup.bash
-  python3 /home/sunrise/robot/hand_to_eye/camera_to_base_transform.py
-
-
-  ---
-  验证用的辅助命令
-
-  查看相机检测到的目标在 base_link 下的坐标：
-
-  source /opt/ros/humble/setup.bash
-  ros2 topic echo /visual_target_base
-
-=================================================
-五类情绪识别（happy、neutral、surprise、low_mood、negative_distress）
-=================================================
- -------------------------------------------------
-终端1 — 启动相机                                                                                                      
+```bash
 source /opt/ros/humble/setup.bash
-source ~/robot/Orbbec_ws/install/setup.bash
+source /home/sunrise/robot/Orbbec_ws/install/setup.bash
 ros2 launch orbbec_camera gemini2.launch.py
+```
 
-终端2 — 启动情绪识别
-source /opt/ros/humble/setup.bash                                                                                       
-source /opt/tros/humble/setup.bash
+终端 2：启动检测节点
 
-可视化：
-python3 ~/robot/Orbbec_ws/src/emotion_local/emotion_local/emotion_fusion_node.py --ros-args -p show_image:=true 
-无窗口：
-python3 ~/robot/Orbbec_ws/src/emotion_local/emotion_local/emotion_fusion_node.py
-
-终端3 — 看 JSON 结果
+```bash
 source /opt/ros/humble/setup.bash
-ros2 topic echo /emotion/result
+source /home/sunrise/robot/Orbbec_ws/install/setup.bash
+ros2 run detector duck_detector_node
+```
 
+终端 3：启动主抓取链路
+
+```bash
+source /opt/ros/humble/setup.bash
+source /home/sunrise/robot/robot_ws/install/setup.bash
+ros2 launch robot_bringup open_loop_grasp.launch.py
+```
+
+终端 4：启动目标转换桥
+
+```bash
+source /opt/ros/humble/setup.bash
+source /home/sunrise/robot/Orbbec_ws/install/setup.bash
+source /home/sunrise/robot/robot_ws/install/setup.bash
+python3 /home/sunrise/robot/hand_to_eye/camera_to_base_transform.py
+```
+
+## 最小验证
+
+```bash
+ros2 topic echo /duck_position --once
+ros2 topic echo /visual_target_base --once
+ros2 topic echo /robot_arm/end_pose --once
+ros2 topic echo /robot_arm/joint_state --once
+ros2 topic echo /robot_arm/executor_status
+```
+
+## Service robot one-command bringup / boot autostart
+
+Recommended ROS2 entrypoint:
+
+```bash
+ros2 launch robot_bringup service_robot_grasp_bringup.launch.py
+```
+
+`airbot_server` is still started separately, either manually or with systemd.
+It is not embedded in ROS2 launch.
+
+The LLM interface remains `/visual_target_base`
+(`robot_msgs/msg/VisualTarget`, `base_link`). LLM modules must not publish
+directly to `/robot_arm/cart_waypoints`; that topic is still an internal
+waypoint blend execution topic from `grasp_task_open_loop.py` to
+`arm_executor_node.py`.
+
+The waypoint blend approach is the recommended open_loop main path. The
+existing `open_loop_grasp.launch.py` remains available as the lower-level
+debug entrypoint.
+
+Autostart templates and installation notes are in
+`docs/auto_start_bringup.md`.
+
+## TODO After Real-Machine Validation
+
+After the `move_cart_waypoints` main path is verified on hardware, planned
+cleanup:
+
+1. Delete the `visual_servo` plan.
+2. Delete the legacy J6 compensation path.
+3. Delete unused `active_search`, `search_pose`, and old sequence modules.
+4. Delete the sequential fallback or keep it as debug mode only.
+5. Trim README and launch files.
+
+These files stay in the repository until the real-machine path is stable.

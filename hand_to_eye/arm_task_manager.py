@@ -19,6 +19,7 @@ import shlex
 import signal
 import subprocess
 import time
+from pathlib import Path
 from dataclasses import dataclass
 from typing import Dict, Optional
 
@@ -103,6 +104,8 @@ class ArmTaskManager(Node):
         self.declare_parameter("task_timeout_sec", 90.0)
         self.declare_parameter("cleanup_detector_after_done", True)
         self.declare_parameter("launch_yolo_for_grasp", False)
+        self.declare_parameter("disable_executor_init_for_auto_grasp", True)
+        self.declare_parameter("open_loop_config_file", "")
         self.declare_parameter("command_topic", "/arm/grasp_command")
         self.declare_parameter("legacy_command_topic", "/command")
 
@@ -112,6 +115,10 @@ class ArmTaskManager(Node):
             self.get_parameter("cleanup_detector_after_done").value)
         self.launch_yolo_for_grasp = bool(
             self.get_parameter("launch_yolo_for_grasp").value)
+        self.disable_executor_init_for_auto_grasp = bool(
+            self.get_parameter("disable_executor_init_for_auto_grasp").value)
+        self.open_loop_config_file = str(
+            self.get_parameter("open_loop_config_file").value or "")
 
         command_topic = str(self.get_parameter("command_topic").value)
         legacy_command_topic = str(self.get_parameter("legacy_command_topic").value)
@@ -207,13 +214,43 @@ class ArmTaskManager(Node):
     def ensure_open_loop(self):
         if self.process_alive(self.open_loop_proc):
             return
+        config_file = self.prepare_open_loop_config()
+        launch_args = "task_log_level:=info executor_log_level:=warn"
+        if config_file:
+            launch_args = f"config_file:={shlex.quote(config_file)} " + launch_args
         cmd = shell_join([
             "source /opt/ros/humble/setup.bash",
             f"source {shlex.quote(self.robot_root)}/robot_ws/install/setup.bash",
-            "ros2 launch robot_bringup open_loop_grasp.launch.py "
-            "task_log_level:=info executor_log_level:=warn",
+            "ros2 launch robot_bringup open_loop_grasp.launch.py " + launch_args,
         ])
         self.open_loop_proc = self.start_shell_process("open_loop_grasp", cmd)
+
+    def prepare_open_loop_config(self) -> str:
+        if self.open_loop_config_file:
+            return self.open_loop_config_file
+        if not self.disable_executor_init_for_auto_grasp:
+            return ""
+
+        candidates = [
+            Path(self.robot_root) / "robot_ws/install/robot_bringup/share/robot_bringup/config/open_loop_grasp.yaml",
+            Path(self.robot_root) / "robot_ws/src/robot_bringup/config/open_loop_grasp.yaml",
+        ]
+        source_path = next((p for p in candidates if p.exists()), None)
+        if source_path is None:
+            self.get_logger().warning(
+                "Cannot find open_loop_grasp.yaml; launch will use package default config.")
+            return ""
+
+        text = source_path.read_text(encoding="utf-8")
+        if "do_init: true" not in text:
+            return str(source_path)
+        text = text.replace("do_init: true", "do_init: false", 1)
+        target_path = Path("/tmp/arm_task_open_loop_grasp_no_init.yaml")
+        target_path.write_text(text, encoding="utf-8")
+        self.get_logger().info(
+            f"Use auto-grasp config {target_path} based on {source_path}; "
+            "arm_executor_node.do_init=false.")
+        return str(target_path)
 
     def ensure_transform(self):
         if self.process_alive(self.transform_proc):

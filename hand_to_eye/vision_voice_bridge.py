@@ -215,7 +215,10 @@ class VisionVoiceBridge(Node):
         except json.JSONDecodeError:
             raw = {"status": "parse_error", "raw": msg.data}
 
-        emotion = str(raw.get("emotion", "unknown"))
+        if raw.get("status") == "no_face" or raw.get("has_face") is False:
+            return
+
+        emotion = str(raw.get("emotion") or raw.get("stable_emotion") or "unknown")
         context = {
             "event": "emotion",
             "source": "/emotion/result",

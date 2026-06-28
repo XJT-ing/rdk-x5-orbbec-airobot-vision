@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Launch the requested visual detector and grasp chain from /command.
+"""Launch the requested visual detector and grasp chain from /arm/grasp_command.
 
-Expected command payload:
+Expected primary command payload:
+  msg.data = "苹果"
+
+Legacy debug payload on /command is still accepted:
   [{"actuator":"机械臂","action":"抓取","params":{"target":"苹果"}}]
-
 The node is intended to run on the vision/arm RDK X5 after:
   1. airbot_server is running on can1
   2. the arm has been moved to the lower home pose
@@ -101,7 +103,8 @@ class ArmTaskManager(Node):
         self.declare_parameter("task_timeout_sec", 90.0)
         self.declare_parameter("cleanup_detector_after_done", True)
         self.declare_parameter("launch_yolo_for_grasp", False)
-        self.declare_parameter("command_topic", "/command")
+        self.declare_parameter("command_topic", "/arm/grasp_command")
+        self.declare_parameter("legacy_command_topic", "/command")
 
         self.robot_root = str(self.get_parameter("robot_root").value)
         self.task_timeout_sec = float(self.get_parameter("task_timeout_sec").value)
@@ -111,7 +114,10 @@ class ArmTaskManager(Node):
             self.get_parameter("launch_yolo_for_grasp").value)
 
         command_topic = str(self.get_parameter("command_topic").value)
-        self.create_subscription(String, command_topic, self.command_callback, 10)
+        legacy_command_topic = str(self.get_parameter("legacy_command_topic").value)
+        self.create_subscription(String, command_topic, self.grasp_command_callback, 10)
+        if legacy_command_topic:
+            self.create_subscription(String, legacy_command_topic, self.command_callback, 10)
         self.create_subscription(
             String,
             "/robot_arm/executor_status",
@@ -139,18 +145,25 @@ class ArmTaskManager(Node):
         self.executor_status = "UNKNOWN"
 
         self.get_logger().info(
-            f"arm_task_manager ready. Listening on {command_topic}. "
+            f"arm_task_manager ready. Listening on {command_topic}; legacy JSON topic={legacy_command_topic}. "
             f"Known targets: {', '.join(TARGETS.keys())}")
+
+    def grasp_command_callback(self, msg: String):
+        target_label = msg.data.strip()
+        if not target_label:
+            self.get_logger().warning("Ignore empty /arm/grasp_command target.")
+            return
+        self.start_grasp_for_target(target_label)
 
     def command_callback(self, msg: String):
         try:
             commands = json.loads(msg.data)
         except json.JSONDecodeError as exc:
-            self.get_logger().warning(f"Ignore malformed /command JSON: {exc}")
+            self.get_logger().warning(f"Ignore malformed legacy /command JSON: {exc}")
             return
 
         if not isinstance(commands, list):
-            self.get_logger().warning("Ignore /command because payload is not a JSON array.")
+            self.get_logger().warning("Ignore legacy /command because payload is not a JSON array.")
             return
 
         for command in commands:

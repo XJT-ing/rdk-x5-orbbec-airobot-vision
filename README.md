@@ -11,7 +11,7 @@
 - 控制 AIRBOT Play 六轴机械臂和 G2 夹爪执行抓取、抬升和复位；
 - 运行五类情绪识别，输出 happy、neutral、surprise、low_mood、negative_distress；
 - 将桌面物体和情绪上下文发布给语音侧，用于问答、陪伴和干预；
-- 订阅语音侧 `/command`，根据任务自动启动识别和抓取链路。
+- 订阅语音侧 `/arm/grasp_command`，根据中文目标名自动启动识别和抓取链路。
 
 ## 目录结构
 
@@ -38,10 +38,10 @@ Gemini2 RGB-D
   -> detect_yolo_node
   -> /yolo_detections
   -> vision_voice_bridge.py
-  -> /vision/scene_text, /vision/dialogue_context
+  -> /vision/scene_objects  # 0.5 秒窗口内出现最多的物品
 ```
 
-当用户问“桌子上有什么”时，语音侧可以直接读取 `/vision/scene_text` 或 `/vision/dialogue_context` 回答。
+当用户问“桌子上有什么”时，语音侧按接口文档读取 `/vision/scene_objects`，由大模型/扬声器组织回答。
 
 ### 视觉定位与机械臂抓取
 
@@ -69,7 +69,7 @@ Gemini2 RGB-D
   -> emotion_fusion_node.py
   -> /emotion/result
   -> vision_voice_bridge.py
-  -> /vision/emotion_context, /vision/dialogue_context
+  -> /vision/emotion_context  # 仅在手动运行 emotion_fusion_node.py 后发布
 ```
 
 当情绪为 `low_mood` 或 `negative_distress` 时，视觉侧会标记：
@@ -158,10 +158,10 @@ python3 /home/sunrise/robot/hand_to_eye/arm_task_manager.py
 
 | Topic | Type | 说明 |
 | --- | --- | --- |
-| `/command` | `std_msgs/msg/String` | 语音侧发布的任务命令 |
+| `/arm/grasp_command` | `std_msgs/msg/String` | 语音侧 control_node 发布的抓取目标中文名 |
 | `/yolo_detections` | `ai_msgs/msg/PerceptionTargets` | YOLO 原始识别结果 |
-| `/vision/scene_text` | `std_msgs/msg/String` | 桌面物体中文播报文本 |
-| `/vision/dialogue_context` | `std_msgs/msg/String` | 物体与情绪统一上下文 |
+| `/vision/scene_objects` | `std_msgs/msg/String` | 桌面物体 JSON，0.5 秒窗口投票后发布 |
+| `/vision/emotion_context` | `std_msgs/msg/String` | 情绪 JSON，由 emotion_fusion_node.py 输出后转发 |
 | `/emotion/result` | `std_msgs/msg/String` | 情绪识别原始结果 |
 | `/detect_yolo/apple_position` | `geometry_msgs/msg/PointStamped` | 苹果相机坐标 |
 | `/detect_yolo/banana_position` | `geometry_msgs/msg/PointStamped` | 香蕉相机坐标 |

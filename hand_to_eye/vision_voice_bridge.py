@@ -2,19 +2,24 @@
 # -*- coding: utf-8 -*-
 """Publish visual context for the voice/LLM board without touching voice code.
 
+Interface basis: ros_voice integration document v1.1.
+
 Inputs:
   /yolo_detections      ai_msgs/msg/PerceptionTargets
   /emotion/result       std_msgs/msg/String, JSON from emotion_fusion_node.py
 
-Outputs:
-  /vision/scene_objects     JSON object list for the voice board
-  /vision/scene_text        Short Chinese sentence for "桌子上有什么东西"
-  /vision/emotion_context   JSON emotion context with intervention flag
-  /vision/dialogue_context  Unified JSON events for the voice board
+Required outputs for voice:
+  /vision/scene_objects     std_msgs/msg/String JSON, published every 0.5 s when objects exist
+  /vision/emotion_context   std_msgs/msg/String JSON, only after emotion_fusion_node publishes
+
+Debug/compatibility outputs:
+  /vision/scene_text        Short Chinese sentence for local debugging
+  /vision/dialogue_context  Unified JSON events for older integration tests
 """
 
+from collections import Counter, defaultdict
 import json
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 import rclpy
 from rclpy.node import Node
@@ -134,14 +139,15 @@ class VisionVoiceBridge(Node):
     def __init__(self):
         super().__init__("vision_voice_bridge")
 
-        self.declare_parameter("scene_publish_period_sec", 1.0)
-        self.declare_parameter("scene_stale_sec", 3.0)
+        self.declare_parameter("scene_publish_period_sec", 0.5)
+        self.declare_parameter("scene_vote_window_sec", 0.5)
         self.declare_parameter("min_detection_confidence", 0.35)
         self.declare_parameter("emotion_intervention_classes", ["low_mood", "negative_distress"])
 
         self.scene_publish_period_sec = float(
             self.get_parameter("scene_publish_period_sec").value)
-        self.scene_stale_sec = float(self.get_parameter("scene_stale_sec").value)
+        self.scene_vote_window_sec = float(
+            self.get_parameter("scene_vote_window_sec").value)
         self.min_detection_confidence = float(
             self.get_parameter("min_detection_confidence").value)
         self.emotion_intervention_classes = set(
@@ -162,44 +168,46 @@ class VisionVoiceBridge(Node):
         self.create_subscription(String, "/emotion/result", self.emotion_callback, 10)
         self.timer = self.create_timer(self.scene_publish_period_sec, self.publish_scene_context)
 
-        self.latest_objects: List[dict] = []
-        self.latest_scene_time: Optional[float] = None
-        self.latest_scene_header = None
+        self.scene_frames: List[Tuple[float, List[dict]]] = []
 
         self.get_logger().info(
-            "vision_voice_bridge ready. Publishing /vision/scene_objects, "
-            "/vision/scene_text, /vision/emotion_context, /vision/dialogue_context")
+            "vision_voice_bridge ready. /vision/scene_objects uses a "
+            f"{self.scene_vote_window_sec:.2f}s majority-vote window; "
+            "emotion_context is published only when /emotion/result is received.")
 
     def yolo_callback(self, msg: PerceptionTargets):
         objects = []
         now = self.now_sec()
         for target in msg.targets:
-            class_name = str(getattr(target, "type", "unknown") or "unknown")
-            confidence = self.target_confidence(target)
-            if confidence < self.min_detection_confidence:
-                continue
-
-            item = {
-                "class_name": class_name,
-                "name_zh": CLASS_ZH.get(class_name, class_name),
-                "confidence": round(confidence, 4),
-                "graspable": class_name in GRASPABLE_CLASSES,
-                "action": "grasp_allowed" if class_name in GRASPABLE_CLASSES else "dialogue_only",
-            }
-            point = self.target_point(target)
-            if point is not None:
-                item["camera_xyz"] = {
-                    "x": round(point[0], 4),
-                    "y": round(point[1], 4),
-                    "z": round(point[2], 4),
-                }
-            objects.append(item)
+            item = self.make_scene_object(target)
+            if item is not None:
+                objects.append(item)
 
         objects.sort(key=lambda item: item.get("confidence", 0.0), reverse=True)
-        self.latest_objects = objects
-        self.latest_scene_time = now
-        self.latest_scene_header = msg.header
-        self.publish_scene_context()
+        self.scene_frames.append((now, objects))
+        self.prune_scene_frames(now)
+
+    def make_scene_object(self, target) -> Optional[dict]:
+        class_name = str(getattr(target, "type", "unknown") or "unknown")
+        confidence = self.target_confidence(target)
+        if confidence < self.min_detection_confidence:
+            return None
+
+        item = {
+            "class_name": class_name,
+            "name_zh": CLASS_ZH.get(class_name, class_name),
+            "confidence": round(confidence, 4),
+            "graspable": class_name in GRASPABLE_CLASSES,
+            "action": "grasp_allowed" if class_name in GRASPABLE_CLASSES else "dialogue_only",
+        }
+        point = self.target_point(target)
+        if point is not None:
+            item["camera_xyz"] = {
+                "x": round(point[0], 4),
+                "y": round(point[1], 4),
+                "z": round(point[2], 4),
+            }
+        return item
 
     def emotion_callback(self, msg: String):
         try:
@@ -223,36 +231,102 @@ class VisionVoiceBridge(Node):
         self.publish_json(self.dialogue_context_pub, context)
 
     def publish_scene_context(self):
-        if self.latest_scene_time is None:
-            return
-        age = self.now_sec() - self.latest_scene_time
-        if age > self.scene_stale_sec:
+        now = self.now_sec()
+        frames = self.recent_scene_frames(now)
+        if not frames:
             return
 
+        objects = self.voted_scene_objects(frames)
+        if not objects:
+            return
+
+        first_stamp = min(stamp for stamp, _ in frames)
+        last_stamp = max(stamp for stamp, _ in frames)
         context = {
             "event": "scene_objects",
             "source": "/yolo_detections",
-            "stamp_sec": round(self.latest_scene_time, 3),
-            "age_sec": round(age, 3),
-            "objects": self.latest_objects,
+            "stamp_sec": round(last_stamp, 3),
+            "age_sec": round(now - last_stamp, 3),
+            "window_sec": round(max(last_stamp - first_stamp, self.scene_vote_window_sec), 3),
+            "window_frames": len(frames),
+            "count": len(objects),
+            "objects": objects,
             "graspable_targets": [
-                item for item in self.latest_objects if item.get("graspable")
+                item for item in objects if item.get("graspable")
             ],
             "dialogue_only_objects": [
-                item for item in self.latest_objects if not item.get("graspable")
+                item for item in objects if not item.get("graspable")
             ],
         }
-        text = self.scene_text(self.latest_objects)
+        text = self.scene_text(objects)
         self.publish_json(self.scene_objects_pub, context)
         self.scene_text_pub.publish(String(data=text))
         dialogue_context = dict(context)
         dialogue_context["text_zh"] = text
         self.publish_json(self.dialogue_context_pub, dialogue_context)
 
-    def scene_text(self, objects: List[dict]) -> str:
-        if not objects:
-            return "我暂时没有在桌面上识别到明显物品。"
+    def recent_scene_frames(self, now: float) -> List[Tuple[float, List[dict]]]:
+        self.prune_scene_frames(now)
+        return [
+            (stamp, objects)
+            for stamp, objects in self.scene_frames
+            if now - stamp <= self.scene_vote_window_sec
+        ]
 
+    def prune_scene_frames(self, now: float):
+        keep_sec = max(self.scene_vote_window_sec * 2.0, self.scene_publish_period_sec * 2.0, 1.0)
+        self.scene_frames = [
+            (stamp, objects)
+            for stamp, objects in self.scene_frames
+            if now - stamp <= keep_sec
+        ]
+
+    def voted_scene_objects(self, frames: List[Tuple[float, List[dict]]]) -> List[dict]:
+        class_frame_hits: Counter = Counter()
+        class_count_votes = defaultdict(Counter)
+        candidates_by_class = defaultdict(list)
+
+        for _, objects in frames:
+            per_frame_counts = Counter(item.get("class_name", "unknown") for item in objects)
+            for class_name, count in per_frame_counts.items():
+                class_frame_hits[class_name] += 1
+                class_count_votes[class_name][count] += 1
+            for item in objects:
+                candidates_by_class[item.get("class_name", "unknown")].append(item)
+
+        if not class_frame_hits:
+            return []
+
+        max_hits = max(class_frame_hits.values())
+        selected_classes = [
+            class_name for class_name, hits in class_frame_hits.items()
+            if hits == max_hits
+        ]
+
+        voted_objects = []
+        for class_name in sorted(selected_classes, key=lambda name: (-class_frame_hits[name], name)):
+            count_vote = class_count_votes[class_name]
+            modal_count = count_vote.most_common(1)[0][0] if count_vote else 1
+            candidates = sorted(
+                candidates_by_class[class_name],
+                key=lambda item: item.get("confidence", 0.0),
+                reverse=True,
+            )
+            if not candidates:
+                continue
+            for item in candidates[:max(1, modal_count)]:
+                stable_item = dict(item)
+                stable_item["window_hits"] = class_frame_hits[class_name]
+                stable_item["window_frames"] = len(frames)
+                voted_objects.append(stable_item)
+
+        voted_objects.sort(
+            key=lambda item: (item.get("window_hits", 0), item.get("confidence", 0.0)),
+            reverse=True,
+        )
+        return voted_objects
+
+    def scene_text(self, objects: List[dict]) -> str:
         counts: Dict[str, int] = {}
         for item in objects:
             name = item.get("name_zh") or item.get("class_name", "物品")

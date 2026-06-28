@@ -7,7 +7,7 @@
 | 文件 | 作用 |
 | --- | --- |
 | `camera_to_base_transform.py` | 将相机坐标系目标点转换成 `/visual_target_base` |
-| `arm_task_manager.py` | 订阅语音侧 `/command`，自动启动抓取链路 |
+| `arm_task_manager.py` | 订阅语音侧 `/arm/grasp_command`，自动启动抓取链路 |
 | `vision_voice_bridge.py` | 将 YOLO 和情绪识别结果发布给语音侧 |
 | `solve_handeye.py` | 手眼标定求解 |
 | `auto_pick_from_base.py` | 旧调试抓取脚本，主链路不推荐使用 |
@@ -56,10 +56,10 @@ source /home/sunrise/robot/robot_ws/install/setup.bash
 python3 /home/sunrise/robot/hand_to_eye/arm_task_manager.py
 ```
 
-语音侧向 `/command` 发布：
+语音侧按接口文档向 `/arm/grasp_command` 发布中文目标名：
 
-```json
-[{"actuator":"机械臂","action":"抓取","params":{"target":"苹果"}}]
+```text
+苹果
 ```
 
 支持目标：
@@ -155,13 +155,13 @@ python3 /home/sunrise/robot/hand_to_eye/vision_voice_bridge.py
 }
 ```
 
-语音侧推荐只订阅 `/vision/dialogue_context`，按 `event` 区分桌面物体和情绪事件。
+语音侧按接口文档订阅 `/vision/scene_objects` 和 `/vision/emotion_context`；`/vision/scene_text`、`/vision/dialogue_context` 仅作为本地调试/兼容输出。
 
 ## 调试命令
 
 ```bash
 ros2 topic echo /visual_target_base
 ros2 topic echo /arm_task/status
-ros2 topic echo /vision/scene_text
-ros2 topic echo /vision/dialogue_context
+ros2 topic echo /vision/scene_objects
+ros2 topic echo /vision/emotion_context
 ```

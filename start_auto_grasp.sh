@@ -65,14 +65,14 @@ echo "============================================================"
 echo "AIRBOT Auto Grasp System"
 echo "============================================================"
 echo "Please make sure airbot_server is already running in another terminal:"
-echo "  bash /home/sunrise/robot/start_airbot_can0.sh"
+echo "  bash /home/sunrise/robot/start_airbot_can1.sh"
 echo
 echo "This script uses default ROS2 RMW."
 echo "It does NOT force rmw_cyclonedds_cpp."
 echo
 echo "Important:"
-echo "  Do NOT run the old camera_to_base_transform.py directly."
-echo "  This script remaps /visual_target_base to /visual_target_base_candidate."
+echo "  camera_to_base_transform.py publishes /visual_target_base directly."
+echo "  open_loop_grasp.launch.py consumes /visual_target_base as robot_msgs/msg/VisualTarget."
 echo "============================================================"
 echo
 
@@ -94,15 +94,11 @@ start_process "robot_bringup_open_loop_grasp" \
 echo "[WAIT] Waiting for robot bringup startup..."
 sleep 4
 
-start_process "camera_to_base_candidate" \
-    python3 /home/sunrise/robot/hand_to_eye/camera_to_base_transform.py \
-    --ros-args -r /visual_target_base:=/visual_target_base_candidate
+start_process "camera_to_base_transform" \
+    python3 /home/sunrise/robot/hand_to_eye/camera_to_base_transform.py
 
 echo "[WAIT] Waiting for hand-eye transform startup..."
 sleep 2
-
-start_process "grasp_command_bridge" \
-    python3 /home/sunrise/robot/hand_to_eye/grasp_command_bridge.py
 
 echo
 echo "============================================================"
@@ -110,10 +106,7 @@ echo "[READY] Auto grasp system is running."
 echo "============================================================"
 echo "Expected topics:"
 echo "  /duck_position"
-echo "  /visual_target_base_candidate"
-echo "  /robot_command"
 echo "  /visual_target_base"
-echo "  /robot_command_status"
 echo "  /robot_arm/executor_status"
 echo
 echo "Logs are saved in:"

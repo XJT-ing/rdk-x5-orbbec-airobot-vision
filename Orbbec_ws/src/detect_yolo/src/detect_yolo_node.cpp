@@ -50,7 +50,7 @@ public:
     this->declare_parameter<double>("score_threshold", 0.4);
     this->declare_parameter<std::vector<std::string>>("forward_classes",
       std::vector<std::string>{"bottle", "cup", "bowl", "apple", "banana",
-        "orange", "book", "cell phone", "remote", "scissors", "spoon", "fork",
+        "orange", "cake", "book", "cell phone", "remote", "scissors", "spoon", "fork",
         "knife", "vase", "teddy bear", "toothbrush"});
     this->declare_parameter<bool>("show_image", false);
     this->declare_parameter<int>("depth_range_min_mm", 80);

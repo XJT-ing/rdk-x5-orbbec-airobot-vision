@@ -5,7 +5,8 @@
 Main real-robot chain:
   /duck_position, /red_circle_position, /box_position (PointStamped, camera frame)
   + /detect_yolo/apple_position, /detect_yolo/banana_position,
-    /detect_yolo/bottle_position, /detect_yolo/cake_position (PointStamped, camera frame)
+    /detect_yolo/bottle_position, /detect_yolo/cake_position
+    (PointStamped, camera frame)
   + /robot_arm/end_pose (PoseStamped, base_link -> gripper)
   -> /visual_target_base (robot_msgs/VisualTarget, base_link)
 
@@ -87,6 +88,12 @@ class CameraToBaseTransformer(Node):
         self.active_object_filter_enabled = bool(
             self.get_parameter('active_object_filter_enabled').value)
         self.active_object_name = str(self.get_parameter('active_object_name').value)
+        self.output_topic = str(self.get_parameter('output_topic').value)
+        self.raw_output_topic = str(self.get_parameter('raw_output_topic').value)
+        self.grasp_enable_topic = str(self.get_parameter('grasp_enable_topic').value)
+        self.require_grasp_enable_for_output = bool(
+            self.get_parameter('require_grasp_enable_for_output').value)
+        self.grasp_output_enabled = not self.require_grasp_enable_for_output
 
         self.t_cam2gripper = np.array(
             self.get_parameter('cam_to_gripper_translation').value,
@@ -130,6 +137,16 @@ class CameraToBaseTransformer(Node):
                     reliability=ReliabilityPolicy.RELIABLE,
                 ),
             )
+        self.grasp_enable_sub = self.create_subscription(
+            String,
+            self.grasp_enable_topic,
+            self.grasp_enable_callback,
+            QoSProfile(
+                depth=1,
+                durability=DurabilityPolicy.TRANSIENT_LOCAL,
+                reliability=ReliabilityPolicy.RELIABLE,
+            ),
+        )
         self.duck_sub = self.create_subscription(
             PointStamped,
             '/duck_position',
@@ -172,11 +189,8 @@ class CameraToBaseTransformer(Node):
             lambda msg: self.object_callback(msg, 'box', '/box_position'),
             10,
         )
-        self.target_pub = self.create_publisher(
-            VisualTarget,
-            '/visual_target_base',
-            10,
-        )
+        self.raw_target_pub = self.create_publisher(VisualTarget, self.raw_output_topic, 10)
+        self.target_pub = self.create_publisher(VisualTarget, self.output_topic, 10)
         self.hold_timer = self.create_timer(
             1.0 / max(self.republish_rate_hz, 0.1),
             self.republish_latest_target,
@@ -187,7 +201,12 @@ class CameraToBaseTransformer(Node):
             '/duck_position, /red_circle_position, /box_position, '
             '/detect_yolo/apple_position, /detect_yolo/banana_position, '
             '/detect_yolo/bottle_position, /detect_yolo/cake_position')
-        self.get_logger().info('Publishing: /visual_target_base (robot_msgs/msg/VisualTarget)')
+        self.get_logger().info(
+            f'Publishing raw target for chassis: {self.raw_output_topic} '
+            '(robot_msgs/msg/VisualTarget)')
+        self.get_logger().info(
+            f'Publishing grasp trigger target: {self.output_topic} '
+            f'require_grasp_enable={self.require_grasp_enable_for_output}')
         self.get_logger().info(
             f'Using ^gT_c translation={self.t_cam2gripper.tolist()}, '
             f'quaternion_xyzw={self.q_cam2gripper.tolist()}')
@@ -223,6 +242,10 @@ class CameraToBaseTransformer(Node):
         self.declare_parameter('target_timeout_sec', 1.5)
         self.declare_parameter('active_object_filter_enabled', False)
         self.declare_parameter('active_object_name', '')
+        self.declare_parameter('output_topic', '/visual_target_base')
+        self.declare_parameter('raw_output_topic', '/visual_target_base_raw')
+        self.declare_parameter('grasp_enable_topic', '/arm_task/grasp_enable')
+        self.declare_parameter('require_grasp_enable_for_output', False)
 
     def pose_callback(self, msg: PoseStamped):
         """Cache the latest end-effector pose (^bT_g)."""
@@ -237,7 +260,20 @@ class CameraToBaseTransformer(Node):
         self.active_object_name = new_active
         self.latest_target = None
         self.last_detector_time_sec = None
+        if self.require_grasp_enable_for_output:
+            self.grasp_output_enabled = False
         self.get_logger().info(f'Active grasp object changed to {new_active!r}.')
+
+    def grasp_enable_callback(self, msg: String):
+        """Gate /visual_target_base so open_loop only starts once chassis is ready."""
+        text = msg.data.strip().lower()
+        enabled = text in ('1', 'true', 'yes', 'on', 'enable', 'enabled', 'ready', 'start')
+        if enabled == self.grasp_output_enabled:
+            return
+        self.grasp_output_enabled = enabled
+        self.get_logger().info(
+            f'Grasp trigger output enabled={self.grasp_output_enabled} '
+            f'from {self.grasp_enable_topic}.')
 
     def object_callback(self, msg: PointStamped, object_name: str, source_topic: str):
         """Transform a detector point and publish it as a VisualTarget."""
@@ -281,7 +317,9 @@ class CameraToBaseTransformer(Node):
             self.get_logger().error(f'Failed to transform {source_topic}: {exc}')
             return
 
-        self.target_pub.publish(target)
+        self.raw_target_pub.publish(target)
+        if self.grasp_output_allowed():
+            self.target_pub.publish(target)
         self.latest_target = CachedTarget(
             msg=target,
             object_name=object_name,
@@ -335,13 +373,17 @@ class CameraToBaseTransformer(Node):
             return
 
         if age <= self.target_hold_sec:
-            self.target_pub.publish(self.latest_target.msg)
-            self.info_throttled(
-                'holding_target',
-                f'Holding {self.latest_target.object_name}: '
-                f'base={fmt_xyz(self.latest_target.base_xyz)} age={age:.2f}s',
-                2.0,
-            )
+            if self.grasp_output_allowed():
+                self.target_pub.publish(self.latest_target.msg)
+                self.info_throttled(
+                    'holding_target',
+                    f'Holding grasp target {self.latest_target.object_name}: '
+                    f'base={fmt_xyz(self.latest_target.base_xyz)} age={age:.2f}s',
+                    2.0,
+                )
+
+    def grasp_output_allowed(self) -> bool:
+        return (not self.require_grasp_enable_for_output) or self.grasp_output_enabled
 
     def camera_to_base(self, camera_xyz: list) -> list:
         """Compute ^bP = ^bT_g * ^gT_c * ^cP."""

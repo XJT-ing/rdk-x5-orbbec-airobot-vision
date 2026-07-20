@@ -84,7 +84,6 @@ CLASS_ZH: Dict[str, str] = {
     "tennis racket": "网球拍",
     "bottle": "瓶子",
     "wine glass": "酒杯",
-    "cup": "杯子",
     "fork": "叉子",
     "knife": "刀",
     "spoon": "勺子",
